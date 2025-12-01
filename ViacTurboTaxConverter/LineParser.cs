@@ -1,6 +1,6 @@
 ﻿namespace ViacTurboTaxConverter
 {
-    public static class LineTokenizer
+    public static class LineParser
     {
         public enum WordCountRequirement
         {
@@ -9,7 +9,7 @@
             Minimum,
         }
 
-        public static string[] GetWords(string line, int expectedWordCount, WordCountRequirement wordCountRequirement)
+        public static string[] SplitLine(string line, int expectedWordCount, WordCountRequirement wordCountRequirement)
         {
             var lineComponents = line.Split(" ");
             return wordCountRequirement switch
@@ -27,7 +27,7 @@
         private class LineDoesNotHaveExactWordCountException : Exception
         {
             public LineDoesNotHaveExactWordCountException(string line, int expectedWordCount, int actualWordCount) :
-                base($"The line '{line}' should have exactly {expectedWordCount} words but has {actualWordCount} words.")
+                base($"Line '{line}' must have exactly {expectedWordCount} word(s) but has {actualWordCount}.")
             {
             }
         }
@@ -35,7 +35,7 @@
         private class LineDoesNotHaveMinimumWordCountException : Exception
         {
             public LineDoesNotHaveMinimumWordCountException(string line, int expectedWordCount, int actualWordCount) :
-                base($"The line '{line}' should have at least {expectedWordCount} words but has {actualWordCount} words.")
+                base($"Line '{line}' must have at least {expectedWordCount} word(s) but has {actualWordCount}.")
             {
             }
         }

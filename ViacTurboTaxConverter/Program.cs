@@ -5,11 +5,11 @@ namespace ViacTurboTaxConverter
 {
     internal class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task Main(string[] _)
         {
             const string exchangeSettlement = "Exchange Settlement";
-            using var currencyConverter = new ExchangeRateRetriever();
-            var exchangeSettlementParser = new ExchangeSettlementParser(currencyConverter);
+            using var exchangeRateClient = new ExchangeRateClient();
+            var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
             try
             {
                 var files = Directory.GetFiles(@"C:\Users\JustinThiede\Downloads\viac_all");
@@ -20,8 +20,7 @@ namespace ViacTurboTaxConverter
                     var pages = pdf.GetPages().ToArray();
                     if (pages.Length != 1)
                     {
-                        Console.WriteLine($"The PDF '{file}' should contain exactly one page."); // todo: throw exception
-                        return;
+                        throw new InvalidPageCountException(file, pages.Length);
                     }
 
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
@@ -44,6 +43,14 @@ namespace ViacTurboTaxConverter
             catch (Exception exception)
             {
                 Console.WriteLine(exception.Message);
+            }
+        }
+
+        private class InvalidPageCountException : Exception
+        {
+            public InvalidPageCountException(string filePath, int actualPageCount) :
+                base($"PDF file `{filePath}` must contain exactly 1 page but contains {actualPageCount} page(s).")
+            {
             }
         }
     }
