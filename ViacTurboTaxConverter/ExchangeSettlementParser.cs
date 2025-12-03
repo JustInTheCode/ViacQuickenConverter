@@ -16,26 +16,26 @@
             if (orderFields.Currency == "USD")
             {
                 return new Order(orderFields.SecurityName,
-                                 orderFields.OrderType,
+                                 orderFields.Type,
                                  units,
                                  orderFields.Price,
                                  orderFields.Amount,
-                                 orderFields.OrderDate,
+                                 orderFields.Date,
                                  filePath);
             }
 
-            var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(orderFields.Currency, "USD", orderFields.OrderDate);
+            var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(orderFields.Currency, "USD", orderFields.Date);
             var usdPrice = orderFields.Price * exchangeRate;
             var usdAmount = orderFields.Amount * exchangeRate;
-            var remark = $"Converted from {orderFields.Currency} to USD on {orderFields.OrderDate:yyyy-MM-dd}. " +
-                         $"Exchange rate: {exchangeRate:F6}. Original price: {orderFields.Price:F2}, amount: {orderFields.Amount:F2}.";
+            var remark = $"Converted from {orderFields.Currency} to USD on {orderFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+                         $"Exchange rate: {exchangeRate:F6}. Original share price: {orderFields.Price:F2}, total order amount: {orderFields.Amount:F2}.";
 
             return new Order(orderFields.SecurityName,
-                             orderFields.OrderType,
+                             orderFields.Type,
                              units,
                              usdPrice,
                              usdAmount,
-                             orderFields.OrderDate,
+                             orderFields.Date,
                              filePath,
                              remark);
         }
@@ -78,32 +78,32 @@
 
             if (orderType == OrderType.Unknown)
             {
-                throw new ValueNotFoundException("order type", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.OrderType, filePath);
             }
 
             if (securityName is null)
             {
-                throw new ValueNotFoundException("security name", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.SecurityName, filePath);
             }
 
             if (price == 0)
             {
-                throw new ValueNotFoundException("price", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Price, filePath);
             }
 
             if (currency is null)
             {
-                throw new ValueNotFoundException("currency", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Currency, filePath);
             }
 
             if (amount == 0)
             {
-                throw new ValueNotFoundException("amount", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Amount, filePath);
             }
 
             if (orderDate == default)
             {
-                throw new ValueNotFoundException("order date", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.OrderDate, filePath);
             }
 
             return new OrderFields(securityName,
@@ -117,14 +117,23 @@
         private static OrderType GetOrderType(string line)
         {
             var orderLineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
-            return Enum.TryParse(orderLineComponents[1], out OrderType orderType) ? orderType : throw new ValueInvalidException("order type", line);
+
+            return Enum.TryParse(orderLineComponents[1], out OrderType orderType) ? orderType : throw new ValueInvalidException(ErrorFieldNames.OrderType, line);
         }
 
         private static string GetSecurityName(string line)
         {
             var unitsLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
             var name = string.Join(" ", unitsLineComponents.Skip(2));
-            return name.Length == 0 ? throw new ValueInvalidException(nameof(name), line) : name;
+            if (name.Length == 0)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.SecurityName, line);
+            }
+
+            name = name.Replace("(old)", string.Empty);
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ");
+
+            return name.Trim();
         }
 
         private static (decimal Price, string Currency) GetPriceAndCurrency(string line)
@@ -132,38 +141,52 @@
             var priceLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             var currency = priceLineComponents[1];
             var cleanedPrice = priceLineComponents[2].Replace("'", "");
-            return decimal.TryParse(cleanedPrice, out var price) ? (price, currency) : throw new ValueInvalidException(nameof(price), line);
+
+            return decimal.TryParse(cleanedPrice, out var price) ? (price, currency) : throw new ValueInvalidException(ErrorFieldNames.Price, line);
         }
 
         private static decimal GetAmount(string line)
         {
             var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             var cleanedAmount = amountLineComponents[2].Replace("'", "");
-            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(nameof(amount), line);
+
+            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line);
         }
 
         private static DateTime GetOrderDate(string line)
         {
             var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
-            return DateTime.TryParse(dateLineComponents[4], out var orderDate) ? orderDate : throw new ValueInvalidException(nameof(orderDate), line);
+
+            return DateTime.TryParse(dateLineComponents[4], out var orderDate) ? orderDate : throw new ValueInvalidException(ErrorFieldNames.OrderDate, line);
         }
 
         private readonly record struct OrderFields(
             string SecurityName,
-            OrderType OrderType,
+            OrderType Type,
             decimal Price,
             decimal Amount,
             string Currency,
-            DateTime OrderDate);
+            DateTime Date);
     }
 
+    /// <summary>
+    ///     Represents a security purchase or sale order from a VIAC statement.
+    /// </summary>
+    /// <param name="SecurityName">The name of the security that was bought or sold.</param>
+    /// <param name="Type">The type of order (buy or sell).</param>
+    /// <param name="Units">Units (amount ÷ price).</param>
+    /// <param name="Price">Price per unit.</param>
+    /// <param name="Amount">Total order amount (price × units).</param>
+    /// <param name="Date">The date the order was executed.</param>
+    /// <param name="FilePath">The path to the source file containing this order.</param>
+    /// <param name="Remark">Optional notes about the order, such as currency conversion details.</param>
     public readonly record struct Order(
         string SecurityName,
-        OrderType OrderType,
+        OrderType Type,
         decimal Units,
         decimal Price,
         decimal Amount,
-        DateTime OrderDate,
+        DateTime Date,
         string FilePath,
         string? Remark = null);
 

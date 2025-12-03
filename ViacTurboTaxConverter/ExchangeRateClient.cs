@@ -12,9 +12,7 @@
 
         public async Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency, DateTime conversionDate)
         {
-            var dateStr = conversionDate.ToString("yyyy-MM-dd");
-            var url = $"https://api.frankfurter.app/{dateStr}?from={fromCurrency}&to={toCurrency}";
-
+            var url = $"https://api.frankfurter.app/{conversionDate:yyyy-MM-dd}?from={fromCurrency}&to={toCurrency}";
             var response = await _httpClient.GetStringAsync(url);
             var json = System.Text.Json.JsonDocument.Parse(response);
 

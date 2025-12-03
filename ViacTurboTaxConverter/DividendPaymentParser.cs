@@ -13,37 +13,37 @@
         {
             var dividendFields = ExtractDividendDetails(text, filePath);
             var units = dividendFields.Amount / dividendFields.Payment;
+            var remark = $"{dividendFields.Type}.";
             if (dividendFields.Currency == "USD")
             {
-                return new Dividend(dividendFields.DividendName,
-                                    dividendFields.DividendType,
+                return new Dividend(dividendFields.SecurityName,
                                     units,
                                     dividendFields.Payment,
                                     dividendFields.Amount,
-                                    dividendFields.DividendDate,
-                                    filePath);
+                                    dividendFields.Date,
+                                    filePath,
+                                    remark);
             }
 
-            var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(dividendFields.Currency, "USD", dividendFields.DividendDate);
+            var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(dividendFields.Currency, "USD", dividendFields.Date);
             var usdPayment = dividendFields.Payment * exchangeRate;
             var usdAmount = dividendFields.Amount * exchangeRate;
-            var remark = $"Converted from {dividendFields.Currency} to USD on {dividendFields.DividendDate:yyyy-MM-dd}. " +
-                         $"Exchange rate: {exchangeRate:F6}. Original price: {dividendFields.Payment:F2}, amount: {dividendFields.Amount:F2}.";
+            remark += $" Converted from {dividendFields.Currency} to USD on {dividendFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+                      $"Exchange rate: {exchangeRate:F6}. Original dividend per share: {dividendFields.Payment:F2}, total received dividend: {dividendFields.Amount:F2}.";
 
-            return new Dividend(dividendFields.DividendName,
-                                dividendFields.DividendType,
+            return new Dividend(dividendFields.SecurityName,
                                 units,
                                 usdPayment,
                                 usdAmount,
-                                dividendFields.DividendDate,
+                                dividendFields.Date,
                                 filePath,
                                 remark);
         }
 
         private static DividendFields ExtractDividendDetails(string text, string filePath)
         {
-            var dividendType = DividendType.Unknown;
-            string? dividendName = null;
+            string? dividendType = null;
+            string? securityName = null;
             decimal payment = 0;
             string? currency = null;
             decimal amount = 0;
@@ -57,7 +57,7 @@
 
                 if (line.Contains("units") || line.Contains("Qty"))
                 {
-                    dividendName = GetDividendName(line);
+                    securityName = GetSecurityName(line);
                 }
 
                 if (line.Contains("Dividend payment:"))
@@ -76,37 +76,37 @@
                 }
             }
 
-            if (dividendType == DividendType.Unknown)
+            if (dividendType == null)
             {
-                throw new ValueNotFoundException("dividend type", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.DividendType, filePath);
             }
 
-            if (dividendName is null)
+            if (securityName == null)
             {
-                throw new ValueNotFoundException("dividend name", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.SecurityName, filePath);
             }
 
             if (payment == 0)
             {
-                throw new ValueNotFoundException("payment", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Payment, filePath);
             }
 
-            if (currency is null)
+            if (currency == null)
             {
-                throw new ValueNotFoundException("currency", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Currency, filePath);
             }
 
             if (amount == 0)
             {
-                throw new ValueNotFoundException("amount", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.Amount, filePath);
             }
 
             if (dividendDate == default)
             {
-                throw new ValueNotFoundException("dividend date", filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.DividendDate, filePath);
             }
 
-            return new DividendFields(dividendName,
+            return new DividendFields(securityName,
                                       dividendType,
                                       payment,
                                       amount,
@@ -114,24 +114,27 @@
                                       dividendDate);
         }
 
-        private static DividendType GetDividendType(string line)
+        private static string GetDividendType(string line)
         {
             var dividendLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
             var dividendType = string.Join(" ", dividendLineComponents.Skip(3));
 
-            return dividendType switch
-            {
-                "Ordinary dividend" => DividendType.Ordinary,
-                "Refund withholding tax" => DividendType.TaxRefund,
-                _ => throw new ValueInvalidException("dividend type", line),
-            };
+            return dividendType is "Ordinary dividend" or "Refund withholding tax" ? dividendType : throw new ValueInvalidException(ErrorFieldNames.DividendType, line);
         }
 
-        private static string GetDividendName(string line)
+        private static string GetSecurityName(string line)
         {
             var unitsLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
             var name = string.Join(" ", unitsLineComponents.Skip(2));
-            return name.Length == 0 ? throw new ValueInvalidException(nameof(name), line) : name;
+            if (name.Length == 0)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.SecurityName, line);
+            }
+
+            name = name.Replace("(old)", string.Empty);
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ");
+
+            return name.Trim();
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
@@ -139,47 +142,50 @@
             var paymentLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
             var currency = paymentLineComponents[2];
             var cleanedPayment = paymentLineComponents[3].Replace("'", "");
-            return decimal.TryParse(cleanedPayment, out var payment) ? (payment, currency) : throw new ValueInvalidException(nameof(payment), line);
+
+            return decimal.TryParse(cleanedPayment, out var payment) ? (payment, currency) : throw new ValueInvalidException(ErrorFieldNames.Payment, line);
         }
 
         private static decimal GetAmount(string line)
         {
             var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             var cleanedAmount = amountLineComponents[2].Replace("'", "");
-            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(nameof(amount), line);
+
+            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line);
         }
 
         private static DateTime GetDividendDate(string line)
         {
             var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
-            return DateTime.TryParse(dateLineComponents[4], out var orderDate) ? orderDate : throw new ValueInvalidException(nameof(orderDate), line);
+
+            return DateTime.TryParse(dateLineComponents[4], out var dividendDate) ? dividendDate : throw new ValueInvalidException(ErrorFieldNames.DividendDate, line);
         }
 
         private readonly record struct DividendFields(
-            string DividendName,
-            DividendType DividendType,
+            string SecurityName,
+            string Type,
             decimal Payment,
             decimal Amount,
             string Currency,
-            DateTime DividendDate);
+            DateTime Date);
     }
 
+    /// <summary>
+    ///     Represents a dividend payment from a VIAC statement.
+    /// </summary>
+    /// <param name="SecurityName">The name of the security that paid the dividend.</param>
+    /// <param name="Units">Quantity of shares (amount ÷ payment).</param>
+    /// <param name="Payment">Dividend per share.</param>
+    /// <param name="Amount">Total received dividend.</param>
+    /// <param name="Date">The date the dividend was credited to the account.</param>
+    /// <param name="FilePath">The path to the source file containing this dividend payment.</param>
+    /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary dividend, Refund withholding tax) and currency conversion details if applicable.</param>
     public readonly record struct Dividend(
         string SecurityName,
-        DividendType DividendType,
         decimal Units,
         decimal Payment,
         decimal Amount,
-        DateTime OrderDate,
+        DateTime Date,
         string FilePath,
-        string? Remark = null);
-
-    public enum DividendType
-    {
-        Unknown,
-
-        Ordinary,
-
-        TaxRefund,
-    }
+        string Remark);
 }
