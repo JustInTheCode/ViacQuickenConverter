@@ -13,6 +13,8 @@ namespace ViacTurboTaxConverter
 
         private const string Deposit = "Deposit 3a";
 
+        private const string Interest = "Interest";
+
         public static async Task Main(string[] _)
         {
             try
@@ -21,10 +23,12 @@ namespace ViacTurboTaxConverter
                 var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
                 var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
                 var depositParser = new DepositParser(exchangeRateClient);
+                var interestParser = new InterestParser(exchangeRateClient);
                 var files = Directory.GetFiles(@"C:\Users\JustinThiede\Downloads\viac_all");
                 List<Order> orders = [];
                 List<Dividend> dividends = [];
                 List<Deposit> deposits = [];
+                List<Interest> interests = [];
                 foreach (var file in files)
                 {
                     using var pdf = PdfDocument.Open(file);
@@ -35,7 +39,6 @@ namespace ViacTurboTaxConverter
                     }
 
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
-
                     if (text.Contains(ExchangeSettlement))
                     {
                         Console.WriteLine($"Parsing {ExchangeSettlement}, file: '{file}'.");
@@ -54,6 +57,12 @@ namespace ViacTurboTaxConverter
                         deposits.Add(await depositParser.ParseAsync(text, file));
                         Console.WriteLine($"Parsed {Deposit}, file: '{file}'.");
                     }
+                    else if (text.Contains(Interest))
+                    {
+                        Console.WriteLine($"Parsing {Interest}, file: '{file}'.");
+                        interests.Add(await interestParser.ParseAsync(text, file));
+                        Console.WriteLine($"Parsed {Interest}, file: '{file}'.");
+                    }
                 }
 
                 foreach (var order in orders)
@@ -71,10 +80,16 @@ namespace ViacTurboTaxConverter
                     Console.WriteLine(deposit);
                 }
 
+                foreach (var interest in interests)
+                {
+                    Console.WriteLine(interest);
+                }
+
                 Console.WriteLine($"Parsed {orders.Count} {ExchangeSettlement} statements.");
                 Console.WriteLine($"Parsed {dividends.Count} {DividendPayment} statements.");
                 Console.WriteLine($"Parsed {deposits.Count} {Deposit} statements.");
-                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count} files.");
+                Console.WriteLine($"Parsed {interests.Count} {Interest} statements.");
+                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count + interests.Count} files.");
             }
             catch (Exception exception)
             {

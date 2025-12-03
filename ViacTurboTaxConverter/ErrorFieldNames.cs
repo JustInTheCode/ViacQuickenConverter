@@ -18,8 +18,12 @@
 
         public const string DepositDate = "deposit date";
 
+        public const string InterestDate = "interest date";
+
         public const string DividendType = "dividend type";
 
         public const string Payment = "payment";
+
+        public const string InterestCredit = "interest credit";
     }
 }
