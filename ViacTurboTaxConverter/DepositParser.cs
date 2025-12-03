@@ -55,7 +55,7 @@
 
             if (depositDate == default)
             {
-                throw new ValueNotFoundException(ErrorFieldNames.DividendDate, filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.DepositDate, filePath);
             }
 
             return new DepositFields(payment, currency, depositDate);
