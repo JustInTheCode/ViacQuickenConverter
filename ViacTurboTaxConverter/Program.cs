@@ -15,6 +15,8 @@ namespace ViacTurboTaxConverter
 
         private const string Interest = "Interest";
 
+        private const string Commission = "Commission";
+
         public static async Task Main(string[] _)
         {
             try
@@ -24,11 +26,13 @@ namespace ViacTurboTaxConverter
                 var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
                 var depositParser = new DepositParser(exchangeRateClient);
                 var interestParser = new InterestParser(exchangeRateClient);
+                var commissionParser = new CommissionParser(exchangeRateClient);
                 var files = Directory.GetFiles(@"C:\Users\JustinThiede\Downloads\viac_all");
                 List<Order> orders = [];
                 List<Dividend> dividends = [];
                 List<Deposit> deposits = [];
                 List<Interest> interests = [];
+                List<Commission> commissions = [];
                 foreach (var file in files)
                 {
                     using var pdf = PdfDocument.Open(file);
@@ -63,6 +67,12 @@ namespace ViacTurboTaxConverter
                         interests.Add(await interestParser.ParseAsync(text, file));
                         Console.WriteLine($"Parsed {Interest}, file: '{file}'.");
                     }
+                    else if (text.Contains(Commission))
+                    {
+                        Console.WriteLine($"Parsing {Commission}, file: '{file}'.");
+                        commissions.Add(await commissionParser.ParseAsync(text, file));
+                        Console.WriteLine($"Parsed {Commission}, file: '{file}'.");
+                    }
                 }
 
                 foreach (var order in orders)
@@ -85,11 +95,17 @@ namespace ViacTurboTaxConverter
                     Console.WriteLine(interest);
                 }
 
+                foreach (var commission in commissions)
+                {
+                    Console.WriteLine(commission);
+                }
+
                 Console.WriteLine($"Parsed {orders.Count} {ExchangeSettlement} statements.");
                 Console.WriteLine($"Parsed {dividends.Count} {DividendPayment} statements.");
                 Console.WriteLine($"Parsed {deposits.Count} {Deposit} statements.");
                 Console.WriteLine($"Parsed {interests.Count} {Interest} statements.");
-                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count + interests.Count} files.");
+                Console.WriteLine($"Parsed {commissions.Count} {Commission} statements.");
+                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count} files.");
             }
             catch (Exception exception)
             {

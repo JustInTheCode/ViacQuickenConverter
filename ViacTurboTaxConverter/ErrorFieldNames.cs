@@ -22,8 +22,12 @@
 
         public const string DividendType = "dividend type";
 
+        public const string CommissionDate = "commission type";
+
         public const string Payment = "payment";
 
         public const string InterestCredit = "interest credit";
+
+        public const string ChargedAmount = "charged amount";
     }
 }
