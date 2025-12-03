@@ -81,7 +81,7 @@
     }
 
     /// <summary>
-    ///     Represents a deposit transaction parsed from a VIAC account statement.
+    ///     Represents a deposit transaction parsed from a VIAC statement.
     /// </summary>
     /// <param name="Payment">The amount received in the deposit transaction.</param>
     /// <param name="Date">The date the deposit was credited to the account.</param>
