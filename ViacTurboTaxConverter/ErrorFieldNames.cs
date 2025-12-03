@@ -16,6 +16,8 @@
 
         public const string DividendDate = "dividend date";
 
+        public const string DepositDate = "deposit date";
+
         public const string DividendType = "dividend type";
 
         public const string Payment = "payment";

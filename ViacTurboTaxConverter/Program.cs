@@ -5,19 +5,26 @@ namespace ViacTurboTaxConverter
 {
     internal class Program
     {
+        private const string ExchangeSettlement = "Exchange Settlement";
+
+        private const string DividendPayment = "Dividend Payment";
+
+        private const string TaxRefund = "Refund withholding tax";
+
+        private const string Deposit = "Deposit 3a";
+
         public static async Task Main(string[] _)
         {
-            const string exchangeSettlement = "Exchange Settlement";
-            const string dividendPayment = "Dividend Payment";
-            const string taxRefund = "Refund withholding tax";
-            using var exchangeRateClient = new ExchangeRateClient();
-            var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
-            var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
             try
             {
+                using var exchangeRateClient = new ExchangeRateClient();
+                var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
+                var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
+                var depositParser = new DepositParser(exchangeRateClient);
                 var files = Directory.GetFiles(@"C:\Users\JustinThiede\Downloads\viac_all");
                 List<Order> orders = [];
                 List<Dividend> dividends = [];
+                List<Deposit> deposits = [];
                 foreach (var file in files)
                 {
                     using var pdf = PdfDocument.Open(file);
@@ -29,17 +36,23 @@ namespace ViacTurboTaxConverter
 
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
 
-                    if (text.Contains(exchangeSettlement))
+                    if (text.Contains(ExchangeSettlement))
                     {
-                        Console.WriteLine($"Parsing {exchangeSettlement}, file: '{file}'.");
+                        Console.WriteLine($"Parsing {ExchangeSettlement}, file: '{file}'.");
                         orders.Add(await exchangeSettlementParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {exchangeSettlement}, file: '{file}'.");
+                        Console.WriteLine($"Parsed {ExchangeSettlement}, file: '{file}'.");
                     }
-                    else if (text.Contains(dividendPayment) || text.Contains(taxRefund))
+                    else if (text.Contains(DividendPayment) || text.Contains(TaxRefund))
                     {
-                        Console.WriteLine($"Parsing {dividendPayment}, file: '{file}'.");
+                        Console.WriteLine($"Parsing {DividendPayment}, file: '{file}'.");
                         dividends.Add(await dividendPaymentParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {dividendPayment}, file: '{file}'.");
+                        Console.WriteLine($"Parsed {DividendPayment}, file: '{file}'.");
+                    }
+                    else if (text.Contains(Deposit))
+                    {
+                        Console.WriteLine($"Parsing {Deposit}, file: '{file}'.");
+                        deposits.Add(await depositParser.ParseAsync(text, file));
+                        Console.WriteLine($"Parsed {Deposit}, file: '{file}'.");
                     }
                 }
 
@@ -53,9 +66,15 @@ namespace ViacTurboTaxConverter
                     Console.WriteLine(dividend);
                 }
 
-                Console.WriteLine($"Parsed {orders.Count} {exchangeSettlement}s.");
-                Console.WriteLine($"Parsed {dividends.Count} {dividendPayment}s.");
-                Console.WriteLine($"Parsed {files.Length} files.");
+                foreach (var deposit in deposits)
+                {
+                    Console.WriteLine(deposit);
+                }
+
+                Console.WriteLine($"Parsed {orders.Count} {ExchangeSettlement} statements.");
+                Console.WriteLine($"Parsed {dividends.Count} {DividendPayment} statements.");
+                Console.WriteLine($"Parsed {deposits.Count} {Deposit} statements.");
+                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count} files.");
             }
             catch (Exception exception)
             {
