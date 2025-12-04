@@ -109,6 +109,11 @@ namespace ViacTurboTaxConverter
             }
             catch (Exception exception)
             {
+                if (Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development")
+                {
+                    throw;
+                }
+
                 Console.WriteLine(exception.Message);
             }
         }
