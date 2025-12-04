@@ -36,8 +36,7 @@
                 {
                     (credit, currency) = GetCreditAndCurrency(line);
                 }
-
-                if (line.Contains("we have credited you"))
+                else if (line.Contains("we have credited you"))
                 {
                     interestDate = GetInterestDate(line);
                 }

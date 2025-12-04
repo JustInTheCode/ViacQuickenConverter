@@ -54,23 +54,19 @@
                 {
                     dividendType = GetDividendType(line);
                 }
-
-                if (line.Contains("units") || line.Contains("Qty"))
+                else if (line.Contains("units") || line.Contains("Qty"))
                 {
                     securityName = GetSecurityName(line);
                 }
-
-                if (line.Contains("Dividend payment:"))
+                else if (line.Contains("Dividend payment:"))
                 {
                     (payment, currency) = GetPaymentAndCurrency(line);
                 }
-
-                if (line.Contains("Amount") && !line.Contains("Amount credited:"))
+                else if (line.Contains("Amount") && !line.Contains("Amount credited:"))
                 {
                     amount = GetAmount(line);
                 }
-
-                if (line.Contains("Amount credited:"))
+                else if (line.Contains("Amount credited:"))
                 {
                     dividendDate = GetDividendDate(line);
                 }

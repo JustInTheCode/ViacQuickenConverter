@@ -54,23 +54,19 @@
                 {
                     orderType = GetOrderType(line);
                 }
-
-                if (line.Contains("units") || line.Contains("Qty"))
+                else if (line.Contains("units") || line.Contains("Qty"))
                 {
                     securityName = GetSecurityName(line);
                 }
-
-                if (line.Contains("Price:"))
+                else if (line.Contains("Price:"))
                 {
                     (price, currency) = GetPriceAndCurrency(line);
                 }
-
-                if (line.Contains("Amount"))
+                else if (line.Contains("Amount"))
                 {
                     amount = GetAmount(line);
                 }
-
-                if (line.Contains("Charged amount:"))
+                else if (line.Contains("Charged amount:"))
                 {
                     orderDate = GetOrderDate(line);
                 }

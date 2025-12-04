@@ -36,8 +36,7 @@
                 {
                     (payment, currency) = GetPaymentAndCurrency(line);
                 }
-
-                if (line.Contains("Credit:"))
+                else if (line.Contains("Credit:"))
                 {
                     depositDate = GetDepositDate(line);
                 }

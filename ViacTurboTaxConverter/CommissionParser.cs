@@ -36,8 +36,7 @@
                 {
                     (chargedAmount, currency) = GetChargedAndCurrency(line);
                 }
-
-                if (line.Contains("we have debited your account:"))
+                else if (line.Contains("we have debited your account:"))
                 {
                     commissionDate = GetCommissionDate(line);
                 }
