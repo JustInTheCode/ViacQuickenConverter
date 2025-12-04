@@ -63,17 +63,22 @@
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
         {
             var chargedLineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
+            var expectedChargedWordNumber = chargedLineComponents.Length;
+            var chargedAmountString = chargedLineComponents[expectedChargedWordNumber - 1].Replace("'", "");
             var currency = chargedLineComponents[^2];
-            var cleanedChargedAmount = chargedLineComponents[^1].Replace("'", "");
 
-            return decimal.TryParse(cleanedChargedAmount, out var chargedAmount) ? (chargedAmount, currency) : throw new ValueInvalidException(ErrorFieldNames.ChargedAmount, line);
+            return decimal.TryParse(chargedAmountString, out var chargedAmount) ? (chargedAmount, currency) :
+                       throw new ValueInvalidException(ErrorFieldNames.ChargedAmount, line, expectedChargedWordNumber, chargedAmountString);
         }
 
         private static DateTime GetCommissionDate(string line)
         {
             var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            const int expectedWordNumber = 2;
+            var commissionDateString = dateLineComponents[expectedWordNumber - 1];
 
-            return DateTime.TryParse(dateLineComponents[1], out var commissionDate) ? commissionDate : throw new ValueInvalidException(ErrorFieldNames.CommissionDate, line);
+            return DateTime.TryParse(commissionDateString, out var commissionDate) ? commissionDate :
+                       throw new ValueInvalidException(ErrorFieldNames.CommissionDate, line, expectedWordNumber, commissionDateString);
         }
 
         private readonly record struct CommissionFields(decimal ChargedAmount, string Currency, DateTime Date);

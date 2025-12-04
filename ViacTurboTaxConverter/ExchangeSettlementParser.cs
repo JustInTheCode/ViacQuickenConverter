@@ -113,8 +113,11 @@
         private static OrderType GetOrderType(string line)
         {
             var orderLineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            const int expectedWordNumber = 2;
+            var orderTypeString = orderLineComponents[expectedWordNumber - 1];
 
-            return Enum.TryParse(orderLineComponents[1], out OrderType orderType) ? orderType : throw new ValueInvalidException(ErrorFieldNames.OrderType, line);
+            return Enum.TryParse(orderTypeString, out OrderType orderType) ? orderType :
+                       throw new ValueInvalidException(ErrorFieldNames.OrderType, line, expectedWordNumber, orderTypeString);
         }
 
         private static string GetSecurityName(string line)
@@ -135,25 +138,31 @@
         private static (decimal Price, string Currency) GetPriceAndCurrency(string line)
         {
             var priceLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            const int expectedPriceWordNumber = 3;
+            var priceString = priceLineComponents[expectedPriceWordNumber - 1].Replace("'", "");
             var currency = priceLineComponents[1];
-            var cleanedPrice = priceLineComponents[2].Replace("'", "");
 
-            return decimal.TryParse(cleanedPrice, out var price) ? (price, currency) : throw new ValueInvalidException(ErrorFieldNames.Price, line);
+            return decimal.TryParse(priceString, out var price) ? (price, currency) :
+                       throw new ValueInvalidException(ErrorFieldNames.Price, line, expectedPriceWordNumber, priceString);
         }
 
         private static decimal GetAmount(string line)
         {
             var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
-            var cleanedAmount = amountLineComponents[2].Replace("'", "");
+            const int expectedWordNumber = 3;
+            var amountString = amountLineComponents[expectedWordNumber - 1].Replace("'", "");
 
-            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line);
+            return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, expectedWordNumber, amountString);
         }
 
         private static DateTime GetOrderDate(string line)
         {
             var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            const int expectedWordNumber = 5;
+            var orderDateString = dateLineComponents[expectedWordNumber - 1];
 
-            return DateTime.TryParse(dateLineComponents[4], out var orderDate) ? orderDate : throw new ValueInvalidException(ErrorFieldNames.OrderDate, line);
+            return DateTime.TryParse(orderDateString, out var orderDate) ? orderDate :
+                       throw new ValueInvalidException(ErrorFieldNames.OrderDate, line, expectedWordNumber, orderDateString);
         }
 
         private readonly record struct OrderFields(

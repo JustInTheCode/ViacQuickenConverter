@@ -114,8 +114,9 @@
         {
             var dividendLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
             var dividendType = string.Join(" ", dividendLineComponents.Skip(3));
+            string[] supportedTypes = ["Ordinary dividend", "Refund withholding tax"];
 
-            return dividendType is "Ordinary dividend" or "Refund withholding tax" ? dividendType : throw new ValueInvalidException(ErrorFieldNames.DividendType, line);
+            return supportedTypes.Contains(dividendType) ? dividendType : throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, supportedTypes);
         }
 
         private static string GetSecurityName(string line)
@@ -136,25 +137,31 @@
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
             var paymentLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
+            const int expectedPaymentWordNumber = 4;
+            var paymentString = paymentLineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
             var currency = paymentLineComponents[2];
-            var cleanedPayment = paymentLineComponents[3].Replace("'", "");
 
-            return decimal.TryParse(cleanedPayment, out var payment) ? (payment, currency) : throw new ValueInvalidException(ErrorFieldNames.Payment, line);
+            return decimal.TryParse(paymentString, out var payment) ? (payment, currency) :
+                       throw new ValueInvalidException(ErrorFieldNames.Payment, line, expectedPaymentWordNumber, paymentString);
         }
 
         private static decimal GetAmount(string line)
         {
             var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
-            var cleanedAmount = amountLineComponents[2].Replace("'", "");
+            const int expectedWordNumber = 3;
+            var amountString = amountLineComponents[expectedWordNumber - 1].Replace("'", "");
 
-            return decimal.TryParse(cleanedAmount, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line);
+            return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, expectedWordNumber, amountString);
         }
 
         private static DateTime GetDividendDate(string line)
         {
             var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            const int expectedWordNumber = 5;
+            var dividendDateString = dateLineComponents[expectedWordNumber - 1];
 
-            return DateTime.TryParse(dateLineComponents[4], out var dividendDate) ? dividendDate : throw new ValueInvalidException(ErrorFieldNames.DividendDate, line);
+            return DateTime.TryParse(dividendDateString, out var dividendDate) ? dividendDate :
+                       throw new ValueInvalidException(ErrorFieldNames.DividendDate, line, expectedWordNumber, dividendDateString);
         }
 
         private readonly record struct DividendFields(

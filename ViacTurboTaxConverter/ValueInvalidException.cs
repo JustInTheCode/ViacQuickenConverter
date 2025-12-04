@@ -2,7 +2,8 @@
 {
     public class ValueInvalidException : Exception
     {
-        public ValueInvalidException(string valueName, string line) : base($"Line contains invalid {valueName}: '{line}'")
+        public ValueInvalidException(string valueName, string line, int expectedWordNumber, string actualValue) :
+            base($"Failed to parse {valueName} from line: '{line}'. Expected word #{expectedWordNumber} to be a valid {valueName}, but found: '{actualValue}'.")
         {
         }
     }
