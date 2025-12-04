@@ -8,6 +8,7 @@
         public void Dispose()
         {
             _httpClient.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public async Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency, DateTime conversionDate)
