@@ -1,6 +1,6 @@
 ﻿namespace ViacTurboTaxConverter
 {
-    public class DividendPaymentParser
+    public partial class DividendPaymentParser
     {
         private readonly ExchangeRateClient _exchangeRateClient;
 
@@ -129,7 +129,7 @@
             }
 
             name = name.Replace("(old)", string.Empty);
-            name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ");
+            name = MultipleWhitespaceRegex().Replace(name, " ");
 
             return name.Trim();
         }
@@ -163,6 +163,9 @@
             return DateTime.TryParse(dividendDateString, out var dividendDate) ? dividendDate :
                        throw new ValueInvalidException(ErrorFieldNames.DividendDate, line, expectedWordNumber, dividendDateString);
         }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"\s+")]
+        private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
 
         private readonly record struct DividendFields(
             string SecurityName,

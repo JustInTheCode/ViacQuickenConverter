@@ -1,6 +1,6 @@
 ﻿namespace ViacTurboTaxConverter
 {
-    public class ExchangeSettlementParser
+    public partial class ExchangeSettlementParser
     {
         private readonly ExchangeRateClient _exchangeRateClient;
 
@@ -130,7 +130,7 @@
             }
 
             name = name.Replace("(old)", string.Empty);
-            name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ");
+            name = MultipleWhitespaceRegex().Replace(name, " ");
 
             return name.Trim();
         }
@@ -164,6 +164,9 @@
             return DateTime.TryParse(orderDateString, out var orderDate) ? orderDate :
                        throw new ValueInvalidException(ErrorFieldNames.OrderDate, line, expectedWordNumber, orderDateString);
         }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"\s+")]
+        private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
 
         private readonly record struct OrderFields(
             string SecurityName,
