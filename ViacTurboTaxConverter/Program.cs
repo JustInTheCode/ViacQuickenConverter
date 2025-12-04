@@ -73,6 +73,11 @@ namespace ViacTurboTaxConverter
                         commissions.Add(await commissionParser.ParseAsync(text, file));
                         Console.WriteLine($"Parsed {Commission}, file: '{file}'.");
                     }
+                    else
+                    {
+                        Console.WriteLine($"Skipping unsupported file: '{file}'. File is not a recognized statement type. " +
+                                          $"Supported types: {ExchangeSettlement}, {DividendPayment}, {TaxRefund}, {Deposit}, {Interest}, {Commission}.");
+                    }
                 }
 
                 foreach (var order in orders)
