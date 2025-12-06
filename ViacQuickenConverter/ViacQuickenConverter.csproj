@@ -7,6 +7,8 @@
         <Nullable>enable</Nullable>
         <SelfContained>true</SelfContained>
         <PublishSingleFile>true</PublishSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>full</TrimMode>
         <IsPublishable>true</IsPublishable>
         <IsPackable>false</IsPackable>
         <Version>1.0.0</Version>
@@ -15,6 +17,10 @@
     <ItemGroup>
         <PackageReference Include="PdfPig" Version="0.1.12"/>
         <PackageReference Include="CsvHelper" Version="33.1.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootDescriptor Include="linker.xml"/>
     </ItemGroup>
 
 </Project>

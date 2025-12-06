@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+    <assembly fullname="CsvHelper" preserve="all"/>
+    <assembly fullname="ViacQuickenConverter">
+        <type fullname="ViacQuickenConverter.Quicken.QuickenCsvRow" preserve="all"/>
+    </assembly>
+</linker>
