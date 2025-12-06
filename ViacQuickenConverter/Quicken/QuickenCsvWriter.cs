@@ -79,6 +79,7 @@ namespace ViacQuickenConverter.Quicken
                                                     Action = "IntInc",
                                                     Date = interest.Date.ToString(DateFormats.Standard),
                                                     Account = $"VIAC 3a ({interest.PortfolioNumber})",
+                                                    Security = "Cash", // Quicken does not allow IntInc without a security name
                                                     Amount = interest.Credit,
                                                     Memo = interest.Remark,
                                                 });
