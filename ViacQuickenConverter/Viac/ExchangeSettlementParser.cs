@@ -27,6 +27,7 @@ namespace ViacQuickenConverter.Viac
             {
                 remark += "No currency conversion was necessary.";
                 return new Order(orderFields.SecurityName,
+                                 orderFields.Isin,
                                  orderFields.Type,
                                  units,
                                  orderFields.Price,
@@ -42,6 +43,7 @@ namespace ViacQuickenConverter.Viac
                       $"Exchange rate: {exchangeRate:F6}. Original share price: {orderFields.Price:F2}, total order amount: {orderFields.Amount:F2}.";
 
             return new Order(orderFields.SecurityName,
+                             orderFields.Isin,
                              orderFields.Type,
                              units,
                              usdPrice,
@@ -54,6 +56,7 @@ namespace ViacQuickenConverter.Viac
         {
             var orderType = OrderType.Unknown;
             string? securityName = null;
+            string? isin = null;
             decimal price = 0;
             string? currency = null;
             decimal amount = 0;
@@ -67,6 +70,10 @@ namespace ViacQuickenConverter.Viac
                 else if (line.Contains("units") || line.Contains("Qty"))
                 {
                     securityName = GetSecurityName(line);
+                }
+                else if (line.Contains("ISIN:"))
+                {
+                    isin = GetIsin(line);
                 }
                 else if (line.Contains("Price:"))
                 {
@@ -92,6 +99,11 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.SecurityName, filePath);
             }
 
+            if (isin is null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.Isin, filePath);
+            }
+
             if (price == 0)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.Price, filePath);
@@ -113,6 +125,7 @@ namespace ViacQuickenConverter.Viac
             }
 
             return new OrderFields(securityName,
+                                   isin,
                                    orderType,
                                    price,
                                    amount,
@@ -143,6 +156,13 @@ namespace ViacQuickenConverter.Viac
             name = MultipleWhitespaceRegex().Replace(name, " ");
 
             return name.Trim();
+        }
+
+        private static string GetIsin(string line)
+        {
+            const int expectedWordNumber = 2;
+            var isinLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return isinLineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Price, string Currency) GetPriceAndCurrency(string line)
@@ -180,6 +200,7 @@ namespace ViacQuickenConverter.Viac
 
         private readonly record struct OrderFields(
             string SecurityName,
+            string Isin,
             OrderType Type,
             decimal Price,
             decimal Amount,
@@ -191,6 +212,7 @@ namespace ViacQuickenConverter.Viac
     ///     Represents a security purchase or sale order from a VIAC statement.
     /// </summary>
     /// <param name="SecurityName">The name of the security that was bought or sold.</param>
+    /// <param name="Isin">The ISIN of the security that was bought or sold.</param>
     /// <param name="Type">The type of order (buy or sell).</param>
     /// <param name="Units">Units (amount ÷ price).</param>
     /// <param name="Price">Price per unit.</param>
@@ -199,6 +221,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Remark">Notes about the order, such as currency conversion details.</param>
     public readonly record struct Order(
         string SecurityName,
+        string Isin,
         OrderType Type,
         decimal Units,
         decimal Price,

@@ -6,6 +6,8 @@
 
         public const string SecurityName = "security name";
 
+        public const string Isin = "ISIN";
+
         public const string Price = "price";
 
         public const string Currency = "currency";

@@ -27,6 +27,7 @@ namespace ViacQuickenConverter.Viac
             {
                 remark += "No currency conversion was necessary.";
                 return new Dividend(dividendFields.SecurityName,
+                                    dividendFields.Isin,
                                     units,
                                     dividendFields.Payment,
                                     dividendFields.Amount,
@@ -41,6 +42,7 @@ namespace ViacQuickenConverter.Viac
                       $"Exchange rate: {exchangeRate:F6}. Original dividend per share: {dividendFields.Payment:F2}, total received dividend: {dividendFields.Amount:F2}.";
 
             return new Dividend(dividendFields.SecurityName,
+                                dividendFields.Isin,
                                 units,
                                 usdPayment,
                                 usdAmount,
@@ -52,6 +54,7 @@ namespace ViacQuickenConverter.Viac
         {
             string? dividendType = null;
             string? securityName = null;
+            string? isin = null;
             decimal payment = 0;
             string? currency = null;
             decimal amount = 0;
@@ -65,6 +68,10 @@ namespace ViacQuickenConverter.Viac
                 else if (line.Contains("units") || line.Contains("Qty"))
                 {
                     securityName = GetSecurityName(line);
+                }
+                else if (line.Contains("ISIN:"))
+                {
+                    isin = GetIsin(line);
                 }
                 else if (line.Contains("Dividend payment:"))
                 {
@@ -90,6 +97,11 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.SecurityName, filePath);
             }
 
+            if (isin is null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.Isin, filePath);
+            }
+
             if (payment == 0)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.Payment, filePath);
@@ -111,6 +123,7 @@ namespace ViacQuickenConverter.Viac
             }
 
             return new DividendFields(securityName,
+                                      isin,
                                       dividendType,
                                       payment,
                                       amount,
@@ -140,6 +153,13 @@ namespace ViacQuickenConverter.Viac
             name = MultipleWhitespaceRegex().Replace(name, " ");
 
             return name.Trim();
+        }
+
+        private static string GetIsin(string line)
+        {
+            const int expectedWordNumber = 2;
+            var isinLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return isinLineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
@@ -177,6 +197,7 @@ namespace ViacQuickenConverter.Viac
 
         private readonly record struct DividendFields(
             string SecurityName,
+            string Isin,
             string Type,
             decimal Payment,
             decimal Amount,
@@ -188,6 +209,7 @@ namespace ViacQuickenConverter.Viac
     ///     Represents a dividend payment from a VIAC statement.
     /// </summary>
     /// <param name="SecurityName">The name of the security that paid the dividend.</param>
+    /// <param name="Isin">The ISIN of the security that paid the dividend.</param>
     /// <param name="Units">Quantity of shares (amount ÷ payment).</param>
     /// <param name="Payment">Dividend per share.</param>
     /// <param name="Amount">Total received dividend.</param>
@@ -195,6 +217,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary dividend, Refund withholding tax) and currency conversion details if applicable.</param>
     public readonly record struct Dividend(
         string SecurityName,
+        string Isin,
         decimal Units,
         decimal Payment,
         decimal Amount,
