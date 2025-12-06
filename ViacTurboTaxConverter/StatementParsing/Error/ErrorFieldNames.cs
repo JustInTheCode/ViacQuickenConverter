@@ -1,4 +1,4 @@
-﻿namespace ViacTurboTaxConverter
+﻿namespace ViacTurboTaxConverter.StatementParsing.Error
 {
     public static class ErrorFieldNames
     {

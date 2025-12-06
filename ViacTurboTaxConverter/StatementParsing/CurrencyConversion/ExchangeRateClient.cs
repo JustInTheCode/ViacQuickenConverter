@@ -1,4 +1,4 @@
-﻿namespace ViacTurboTaxConverter
+﻿namespace ViacTurboTaxConverter.StatementParsing.CurrencyConversion
 {
     public class ExchangeRateClient : IDisposable
     {

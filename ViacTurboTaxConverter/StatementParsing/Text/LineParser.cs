@@ -1,4 +1,4 @@
-﻿namespace ViacTurboTaxConverter
+﻿namespace ViacTurboTaxConverter.StatementParsing.Text
 {
     public static class LineParser
     {

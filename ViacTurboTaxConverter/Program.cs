@@ -1,5 +1,9 @@
 ﻿using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
+using ViacTurboTaxConverter.StatementParsing;
+using ViacTurboTaxConverter.StatementParsing.CurrencyConversion;
+using DividendPaymentParser = ViacTurboTaxConverter.StatementParsing.DividendPaymentParser;
+using ExchangeSettlementParser = ViacTurboTaxConverter.StatementParsing.ExchangeSettlementParser;
 
 namespace ViacTurboTaxConverter
 {

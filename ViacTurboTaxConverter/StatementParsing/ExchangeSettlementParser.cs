@@ -1,4 +1,9 @@
-﻿namespace ViacTurboTaxConverter
+﻿using ViacTurboTaxConverter.StatementParsing.CurrencyConversion;
+using ViacTurboTaxConverter.StatementParsing.Error;
+using ViacTurboTaxConverter.StatementParsing.Formatting;
+using ViacTurboTaxConverter.StatementParsing.Text;
+
+namespace ViacTurboTaxConverter.StatementParsing
 {
     public partial class ExchangeSettlementParser
     {
