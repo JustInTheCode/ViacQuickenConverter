@@ -1,4 +1,7 @@
-﻿using ViacQuickenConverter.StatementParsing.CurrencyConversion;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using ViacQuickenConverter.StatementParsing.CurrencyConversion;
 using ViacQuickenConverter.StatementParsing.Error;
 using ViacQuickenConverter.StatementParsing.Formatting;
 using ViacQuickenConverter.StatementParsing.Text;

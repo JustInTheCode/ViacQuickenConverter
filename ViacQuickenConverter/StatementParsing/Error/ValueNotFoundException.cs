@@ -1,4 +1,6 @@
-﻿namespace ViacQuickenConverter.StatementParsing.Error
+﻿using System;
+
+namespace ViacQuickenConverter.StatementParsing.Error
 {
     public class ValueNotFoundException : Exception
     {

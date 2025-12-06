@@ -1,4 +1,6 @@
-﻿namespace ViacQuickenConverter.StatementParsing.Text
+﻿using System;
+
+namespace ViacQuickenConverter.StatementParsing.Text
 {
     public static class LineParser
     {

@@ -1,4 +1,9 @@
-﻿using UglyToad.PdfPig;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 using ViacQuickenConverter.StatementParsing;
 using ViacQuickenConverter.StatementParsing.CurrencyConversion;

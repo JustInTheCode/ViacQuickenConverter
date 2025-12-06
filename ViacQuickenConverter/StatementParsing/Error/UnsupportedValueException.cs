@@ -1,4 +1,7 @@
-﻿namespace ViacQuickenConverter.StatementParsing.Error
+﻿using System;
+using System.Linq;
+
+namespace ViacQuickenConverter.StatementParsing.Error
 {
     public class UnsupportedValueException : Exception
     {

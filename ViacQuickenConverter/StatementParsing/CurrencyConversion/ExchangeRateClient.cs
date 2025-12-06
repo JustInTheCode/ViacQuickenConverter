@@ -1,4 +1,8 @@
-﻿namespace ViacQuickenConverter.StatementParsing.CurrencyConversion
+﻿using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace ViacQuickenConverter.StatementParsing.CurrencyConversion
 {
     public class ExchangeRateClient : IDisposable
     {
