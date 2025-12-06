@@ -20,29 +20,34 @@ namespace ViacQuickenConverter.Viac
             var commissionFields = ExtractCommissionDetails(text, filePath);
             if (commissionFields.ChargedAmount == 0)
             {
-                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, "Amount is zero, no currency conversion necessary");
+                return new Commission(commissionFields.PortfolioNumber, commissionFields.ChargedAmount, commissionFields.Date, "Amount is zero, no currency conversion necessary");
             }
 
             if (commissionFields.Currency == "USD")
             {
-                return new Commission(commissionFields.ChargedAmount, commissionFields.Date);
+                return new Commission(commissionFields.PortfolioNumber, commissionFields.ChargedAmount, commissionFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(commissionFields.Currency, "USD", commissionFields.Date);
             var usdChargedAmount = commissionFields.ChargedAmount * exchangeRate;
             var remark = $"{commissionFields.Currency}-USD ({exchangeRate:F6}), Amt: {commissionFields.ChargedAmount:F2}";
 
-            return new Commission(usdChargedAmount, commissionFields.Date, remark);
+            return new Commission(commissionFields.PortfolioNumber, usdChargedAmount, commissionFields.Date, remark);
         }
 
         private static CommissionFields ExtractCommissionDetails(string text, string filePath)
         {
+            string? portfolioNumber = null;
             decimal? chargedAmount = null;
             string? currency = null;
             DateTime commissionDate = default;
             foreach (var line in text.Split(Environment.NewLine))
             {
-                if (line.Contains("Charged amount:"))
+                if (line.StartsWith("Portfolio"))
+                {
+                    portfolioNumber = GetPortfolioNumber(line);
+                }
+                else if (line.Contains("Charged amount:"))
                 {
                     (chargedAmount, currency) = GetChargedAndCurrency(line);
                 }
@@ -50,6 +55,11 @@ namespace ViacQuickenConverter.Viac
                 {
                     commissionDate = GetCommissionDate(line);
                 }
+            }
+
+            if (portfolioNumber == null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.PortfolioNumber, filePath);
             }
 
             if (chargedAmount == null)
@@ -67,7 +77,14 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.CommissionDate, filePath);
             }
 
-            return new CommissionFields(chargedAmount.Value, currency, commissionDate);
+            return new CommissionFields(portfolioNumber, chargedAmount.Value, currency, commissionDate);
+        }
+
+        private static string GetPortfolioNumber(string line)
+        {
+            const int expectedWordNumber = 2;
+            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return portfolioNumberLineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
@@ -91,14 +108,15 @@ namespace ViacQuickenConverter.Viac
                        throw new ValueInvalidException(ErrorFieldNames.CommissionDate, line, expectedWordNumber, commissionDateString);
         }
 
-        private readonly record struct CommissionFields(decimal ChargedAmount, string Currency, DateTime Date);
+        private readonly record struct CommissionFields(string PortfolioNumber, decimal ChargedAmount, string Currency, DateTime Date);
     }
 
     /// <summary>
     ///     Represents a commission transaction parsed from a VIAC statement.
     /// </summary>
+    /// <param name="PortfolioNumber">The portfolio number associated with the commission.</param>
     /// <param name="ChargedAmount">The commission amount charged to the account.</param>
     /// <param name="Date">The date the commission was debited from the account.</param>
     /// <param name="Remark">Notes about the currency conversion.</param>
-    public readonly record struct Commission(decimal ChargedAmount, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
+    public readonly record struct Commission(string PortfolioNumber, decimal ChargedAmount, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
 }

@@ -2,6 +2,8 @@
 {
     public static class ErrorFieldNames
     {
+        public const string PortfolioNumber = "portfolio number";
+
         public const string OrderType = "order type";
 
         public const string SecurityName = "security name";

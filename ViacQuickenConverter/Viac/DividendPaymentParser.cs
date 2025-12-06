@@ -22,7 +22,8 @@ namespace ViacQuickenConverter.Viac
             var units = dividendFields.Amount / dividendFields.Payment;
             if (dividendFields.Currency == "USD")
             {
-                return new Dividend(dividendFields.SecurityName,
+                return new Dividend(dividendFields.PortfolioNumber,
+                                    dividendFields.SecurityName,
                                     dividendFields.Isin,
                                     units,
                                     dividendFields.Payment,
@@ -36,7 +37,8 @@ namespace ViacQuickenConverter.Viac
             var usdAmount = dividendFields.Amount * exchangeRate;
             var remark = $"{dividendFields.Currency}-USD ({exchangeRate:F6}), Amt: {dividendFields.Amount:F2}, Type: {dividendFields.Type}";
 
-            return new Dividend(dividendFields.SecurityName,
+            return new Dividend(dividendFields.PortfolioNumber,
+                                dividendFields.SecurityName,
                                 dividendFields.Isin,
                                 units,
                                 usdPayment,
@@ -47,6 +49,7 @@ namespace ViacQuickenConverter.Viac
 
         private static DividendFields ExtractDividendDetails(string text, string filePath)
         {
+            string? portfolioNumber = null;
             string? dividendType = null;
             string? securityName = null;
             string? isin = null;
@@ -56,7 +59,11 @@ namespace ViacQuickenConverter.Viac
             DateTime dividendDate = default;
             foreach (var line in text.Split(Environment.NewLine))
             {
-                if (line.StartsWith("Type of dividend:"))
+                if (line.StartsWith("Portfolio"))
+                {
+                    portfolioNumber = GetPortfolioNumber(line);
+                }
+                else if (line.StartsWith("Type of dividend:"))
                 {
                     dividendType = GetDividendType(line);
                 }
@@ -80,6 +87,11 @@ namespace ViacQuickenConverter.Viac
                 {
                     dividendDate = GetDividendDate(line);
                 }
+            }
+
+            if (portfolioNumber == null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.PortfolioNumber, filePath);
             }
 
             if (dividendType == null)
@@ -117,13 +129,21 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.DividendDate, filePath);
             }
 
-            return new DividendFields(securityName,
+            return new DividendFields(portfolioNumber,
+                                      securityName,
                                       isin,
                                       dividendType,
                                       payment,
                                       amount,
                                       currency,
                                       dividendDate);
+        }
+
+        private static string GetPortfolioNumber(string line)
+        {
+            const int expectedWordNumber = 2;
+            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return portfolioNumberLineComponents[expectedWordNumber - 1];
         }
 
         private static string GetDividendType(string line)
@@ -200,6 +220,7 @@ namespace ViacQuickenConverter.Viac
         private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
 
         private readonly record struct DividendFields(
+            string PortfolioNumber,
             string SecurityName,
             string Isin,
             string Type,
@@ -212,6 +233,7 @@ namespace ViacQuickenConverter.Viac
     /// <summary>
     ///     Represents a dividend payment from a VIAC statement.
     /// </summary>
+    /// <param name="PortfolioNumber">The portfolio number associated with the dividend.</param>
     /// <param name="SecurityName">The name of the security that paid the dividend.</param>
     /// <param name="Isin">The ISIN of the security that paid the dividend.</param>
     /// <param name="Units">Quantity of shares (amount ÷ payment).</param>
@@ -220,6 +242,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Date">The date the dividend was credited to the account.</param>
     /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary, Tax Refund) and currency conversion.</param>
     public readonly record struct Dividend(
+        string PortfolioNumber,
         string SecurityName,
         string Isin,
         decimal Units,

@@ -12,7 +12,7 @@ namespace ViacQuickenConverter.Quicken
         public required string Date { get; set; }
 
         [Name("account")]
-        public string Account { get; set; } = "VIAC 3a";
+        public required string Account { get; set; }
 
         [Name("security")]
         public string? Security { get; set; }

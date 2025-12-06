@@ -22,7 +22,8 @@ namespace ViacQuickenConverter.Viac
             var units = orderFields.Amount / orderFields.Price;
             if (orderFields.Currency == "USD")
             {
-                return new Order(orderFields.SecurityName,
+                return new Order(orderFields.PortfolioNumber,
+                                 orderFields.SecurityName,
                                  orderFields.Isin,
                                  orderFields.Type,
                                  units,
@@ -36,7 +37,8 @@ namespace ViacQuickenConverter.Viac
             var usdAmount = orderFields.Amount * exchangeRate;
             var remark = $"{orderFields.Currency}-USD ({exchangeRate:F6}), Price: {orderFields.Price:F2}, Amt: {orderFields.Amount:F2}";
 
-            return new Order(orderFields.SecurityName,
+            return new Order(orderFields.PortfolioNumber,
+                             orderFields.SecurityName,
                              orderFields.Isin,
                              orderFields.Type,
                              units,
@@ -48,6 +50,7 @@ namespace ViacQuickenConverter.Viac
 
         private static OrderFields ExtractOrderDetails(string text, string filePath)
         {
+            string? portfolioNumber = null;
             var orderType = OrderType.Unknown;
             string? securityName = null;
             string? isin = null;
@@ -57,7 +60,11 @@ namespace ViacQuickenConverter.Viac
             DateTime orderDate = default;
             foreach (var line in text.Split(Environment.NewLine))
             {
-                if (line.StartsWith("Order:"))
+                if (line.StartsWith("Portfolio"))
+                {
+                    portfolioNumber = GetPortfolioNumber(line);
+                }
+                else if (line.StartsWith("Order:"))
                 {
                     orderType = GetOrderType(line);
                 }
@@ -81,6 +88,11 @@ namespace ViacQuickenConverter.Viac
                 {
                     orderDate = GetOrderDate(line);
                 }
+            }
+
+            if (portfolioNumber == null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.PortfolioNumber, filePath);
             }
 
             if (orderType == OrderType.Unknown)
@@ -118,13 +130,21 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.OrderDate, filePath);
             }
 
-            return new OrderFields(securityName,
+            return new OrderFields(portfolioNumber,
+                                   securityName,
                                    isin,
                                    orderType,
                                    price,
                                    amount,
                                    currency,
                                    orderDate);
+        }
+
+        private static string GetPortfolioNumber(string line)
+        {
+            const int expectedWordNumber = 2;
+            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return portfolioNumberLineComponents[expectedWordNumber - 1];
         }
 
         private static OrderType GetOrderType(string line)
@@ -193,6 +213,7 @@ namespace ViacQuickenConverter.Viac
         private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
 
         private readonly record struct OrderFields(
+            string PortfolioNumber,
             string SecurityName,
             string Isin,
             OrderType Type,
@@ -205,6 +226,7 @@ namespace ViacQuickenConverter.Viac
     /// <summary>
     ///     Represents a security purchase or sale order from a VIAC statement.
     /// </summary>
+    /// <param name="PortfolioNumber">The portfolio number associated with the order.</param>
     /// <param name="SecurityName">The name of the security that was bought or sold.</param>
     /// <param name="Isin">The ISIN of the security that was bought or sold.</param>
     /// <param name="Type">The type of order (buy or sell).</param>
@@ -214,6 +236,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Date">The date the order was executed.</param>
     /// <param name="Remark">Notes about the currency conversion.</param>
     public readonly record struct Order(
+        string PortfolioNumber,
         string SecurityName,
         string Isin,
         OrderType Type,

@@ -20,29 +20,34 @@ namespace ViacQuickenConverter.Viac
             var interestFields = ExtractInterestDetails(text, filePath);
             if (interestFields.Credit == 0)
             {
-                return new Interest(interestFields.Credit, interestFields.Date, "Amount is zero, no currency conversion necessary");
+                return new Interest(interestFields.PortfolioNumber, interestFields.Credit, interestFields.Date, "Amount is zero, no currency conversion necessary");
             }
 
             if (interestFields.Currency == "USD")
             {
-                return new Interest(interestFields.Credit, interestFields.Date);
+                return new Interest(interestFields.PortfolioNumber, interestFields.Credit, interestFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(interestFields.Currency, "USD", interestFields.Date);
             var usdCredit = interestFields.Credit * exchangeRate;
             var remark = $"{interestFields.Currency}-USD ({exchangeRate:F6}), Amt: {interestFields.Credit:F2}";
 
-            return new Interest(usdCredit, interestFields.Date, remark);
+            return new Interest(interestFields.PortfolioNumber, usdCredit, interestFields.Date, remark);
         }
 
         private static InterestFields ExtractInterestDetails(string text, string filePath)
         {
+            string? portfolioNumber = null;
             decimal? credit = null;
             string? currency = null;
             DateTime interestDate = default;
             foreach (var line in text.Split(Environment.NewLine))
             {
-                if (line.Contains("Interest credit:"))
+                if (line.StartsWith("Portfolio"))
+                {
+                    portfolioNumber = GetPortfolioNumber(line);
+                }
+                else if (line.Contains("Interest credit:"))
                 {
                     (credit, currency) = GetCreditAndCurrency(line);
                 }
@@ -50,6 +55,11 @@ namespace ViacQuickenConverter.Viac
                 {
                     interestDate = GetInterestDate(line);
                 }
+            }
+
+            if (portfolioNumber == null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.PortfolioNumber, filePath);
             }
 
             if (credit == null)
@@ -67,7 +77,14 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.InterestDate, filePath);
             }
 
-            return new InterestFields(credit.Value, currency, interestDate);
+            return new InterestFields(portfolioNumber, credit.Value, currency, interestDate);
+        }
+
+        private static string GetPortfolioNumber(string line)
+        {
+            const int expectedWordNumber = 2;
+            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return portfolioNumberLineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Credit, string Currency) GetCreditAndCurrency(string line)
@@ -91,14 +108,15 @@ namespace ViacQuickenConverter.Viac
                        throw new ValueInvalidException(ErrorFieldNames.InterestDate, line, expectedWordNumber, interestDateString);
         }
 
-        private readonly record struct InterestFields(decimal Credit, string Currency, DateTime Date);
+        private readonly record struct InterestFields(string PortfolioNumber, decimal Credit, string Currency, DateTime Date);
     }
 
     /// <summary>
     ///     Represents an interest transaction parsed from a VIAC statement.
     /// </summary>
+    /// <param name="PortfolioNumber">The portfolio number associated with the interest.</param>
     /// <param name="Credit">The interest amount credited to the account.</param>
     /// <param name="Date">The date the interest was credited to the account.</param>
     /// <param name="Remark">Notes about the currency conversion.</param>
-    public readonly record struct Interest(decimal Credit, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
+    public readonly record struct Interest(string PortfolioNumber, decimal Credit, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
 }

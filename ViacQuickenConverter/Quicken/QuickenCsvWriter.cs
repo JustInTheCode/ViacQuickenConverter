@@ -34,6 +34,7 @@ namespace ViacQuickenConverter.Quicken
                                           {
                                               Action = order.Type == OrderType.Buy ? "Bought" : "Sold",
                                               Date = order.Date.ToString(DateFormats.Standard),
+                                              Account = $"VIAC 3a ({order.PortfolioNumber})",
                                               Security = order.SecurityName,
                                               OptionalSymbol = order.Isin,
                                               Shares = order.Units,
@@ -49,6 +50,7 @@ namespace ViacQuickenConverter.Quicken
                                                 {
                                                     Action = "Div",
                                                     Date = dividend.Date.ToString(DateFormats.Standard),
+                                                    Account = $"VIAC 3a ({dividend.PortfolioNumber})",
                                                     Security = dividend.SecurityName,
                                                     OptionalSymbol = dividend.Isin,
                                                     Shares = dividend.Units,
@@ -64,6 +66,7 @@ namespace ViacQuickenConverter.Quicken
                                               {
                                                   Action = "Cash",
                                                   Date = deposit.Date.ToString(DateFormats.Standard),
+                                                  Account = $"VIAC 3a ({deposit.PortfolioNumber})",
                                                   Amount = deposit.Payment,
                                                   Memo = deposit.Remark,
                                               });
@@ -75,6 +78,7 @@ namespace ViacQuickenConverter.Quicken
                                                 {
                                                     Action = "IntInc",
                                                     Date = interest.Date.ToString(DateFormats.Standard),
+                                                    Account = $"VIAC 3a ({interest.PortfolioNumber})",
                                                     Amount = interest.Credit,
                                                     Memo = interest.Remark,
                                                 });
@@ -86,6 +90,7 @@ namespace ViacQuickenConverter.Quicken
                                                     {
                                                         Action = "MiscExp",
                                                         Date = commission.Date.ToString(DateFormats.Standard),
+                                                        Account = $"VIAC 3a ({commission.PortfolioNumber})",
                                                         Amount = commission.ChargedAmount,
                                                         Memo = commission.Remark,
                                                         Category = "Financial:Financial Advisor",
