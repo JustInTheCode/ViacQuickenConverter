@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ViacQuickenConverter.StatementParsing.Error
+namespace ViacQuickenConverter.Viac.Error
 {
     public class ValueNotFoundException : Exception
     {

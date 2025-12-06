@@ -1,4 +1,4 @@
-﻿namespace ViacQuickenConverter.StatementParsing.Error
+﻿namespace ViacQuickenConverter.Viac.Error
 {
     public static class ErrorFieldNames
     {

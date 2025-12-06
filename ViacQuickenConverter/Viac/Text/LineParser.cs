@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ViacQuickenConverter.StatementParsing.Text
+namespace ViacQuickenConverter.Viac.Text
 {
     public static class LineParser
     {

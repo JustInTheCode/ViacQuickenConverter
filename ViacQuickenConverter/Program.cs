@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
-using ViacQuickenConverter.StatementParsing;
-using ViacQuickenConverter.StatementParsing.CurrencyConversion;
+using ViacQuickenConverter.Viac;
+using ViacQuickenConverter.Viac.CurrencyConversion;
 
 namespace ViacQuickenConverter
 {

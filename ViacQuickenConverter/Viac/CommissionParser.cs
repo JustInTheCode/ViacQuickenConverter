@@ -2,11 +2,11 @@
 using System.IO;
 using System.Threading.Tasks;
 using ViacQuickenConverter.Formatting;
-using ViacQuickenConverter.StatementParsing.CurrencyConversion;
-using ViacQuickenConverter.StatementParsing.Error;
-using ViacQuickenConverter.StatementParsing.Text;
+using ViacQuickenConverter.Viac.CurrencyConversion;
+using ViacQuickenConverter.Viac.Error;
+using ViacQuickenConverter.Viac.Text;
 
-namespace ViacQuickenConverter.StatementParsing
+namespace ViacQuickenConverter.Viac
 {
     public class CommissionParser
     {

@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace ViacQuickenConverter.StatementParsing.CurrencyConversion
+namespace ViacQuickenConverter.Viac.CurrencyConversion
 {
     public class ExchangeRateClient : IDisposable
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace ViacQuickenConverter.StatementParsing.Error
+namespace ViacQuickenConverter.Viac.Error
 {
     public class UnsupportedValueException : Exception
     {
