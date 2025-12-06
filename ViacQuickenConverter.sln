@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViacTurboTaxConverter", "ViacTurboTaxConverter\ViacTurboTaxConverter.csproj", "{0C36C2F6-BEB6-4694-B89C-2B28FE247864}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViacQuickenConverter", "ViacQuickenConverter\ViacQuickenConverter.csproj", "{0C36C2F6-BEB6-4694-B89C-2B28FE247864}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

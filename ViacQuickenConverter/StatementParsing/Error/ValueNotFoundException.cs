@@ -1,4 +1,4 @@
-﻿namespace ViacTurboTaxConverter.StatementParsing.Error
+﻿namespace ViacQuickenConverter.StatementParsing.Error
 {
     public class ValueNotFoundException : Exception
     {

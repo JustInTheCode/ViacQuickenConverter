@@ -1,9 +1,9 @@
-﻿using ViacTurboTaxConverter.StatementParsing.CurrencyConversion;
-using ViacTurboTaxConverter.StatementParsing.Error;
-using ViacTurboTaxConverter.StatementParsing.Formatting;
-using ViacTurboTaxConverter.StatementParsing.Text;
+﻿using ViacQuickenConverter.StatementParsing.CurrencyConversion;
+using ViacQuickenConverter.StatementParsing.Error;
+using ViacQuickenConverter.StatementParsing.Formatting;
+using ViacQuickenConverter.StatementParsing.Text;
 
-namespace ViacTurboTaxConverter.StatementParsing
+namespace ViacQuickenConverter.StatementParsing
 {
     public partial class DividendPaymentParser
     {
