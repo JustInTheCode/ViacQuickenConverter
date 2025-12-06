@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
+using ViacQuickenConverter.Quicken;
 using ViacQuickenConverter.Viac;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 
@@ -118,6 +119,11 @@ namespace ViacQuickenConverter
                 Console.WriteLine($"Parsed {interests.Count} {Interest} statements.");
                 Console.WriteLine($"Parsed {commissions.Count} {Commission} statements.");
                 Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count} files.");
+
+                QuickenCsvWriter.Write(orders, dividends, deposits, interests, commissions);
+
+                Console.WriteLine("Done. Press any key to exit.");
+                Console.ReadKey(true);
             }
             catch (Exception exception)
             {
