@@ -12,6 +12,15 @@
         public async Task<Interest> ParseAsync(string text, string filePath)
         {
             var interestFields = ExtractInterestDetails(text, filePath);
+            if (interestFields.Credit == 0)
+            {
+                return new Interest(interestFields.Credit,
+                                    interestFields.Date,
+                                    filePath,
+                                    "Interest credited is 0. This entry is included for completeness, as some statements may legitimately have zero interest credited. " +
+                                    "Please double-check to ensure this is correct.");
+            }
+
             if (interestFields.Currency == "USD")
             {
                 return new Interest(interestFields.Credit, interestFields.Date, filePath);

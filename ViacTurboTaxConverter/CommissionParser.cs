@@ -12,6 +12,15 @@
         public async Task<Commission> ParseAsync(string text, string filePath)
         {
             var commissionFields = ExtractCommissionDetails(text, filePath);
+            if (commissionFields.ChargedAmount == 0)
+            {
+                return new Commission(commissionFields.ChargedAmount,
+                                      commissionFields.Date,
+                                      filePath,
+                                      "The charged amount is 0. This entry is included for completeness, as some statements may legitimately have a zero commission. " +
+                                      "Please double-check to ensure this is correct.");
+            }
+
             if (commissionFields.Currency == "USD")
             {
                 return new Commission(commissionFields.ChargedAmount, commissionFields.Date, filePath);
@@ -27,7 +36,7 @@
 
         private static CommissionFields ExtractCommissionDetails(string text, string filePath)
         {
-            decimal chargedAmount = 0;
+            decimal? chargedAmount = null;
             string? currency = null;
             DateTime commissionDate = default;
             foreach (var line in text.Split(Environment.NewLine))
@@ -42,7 +51,7 @@
                 }
             }
 
-            if (chargedAmount == 0)
+            if (chargedAmount == null)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.ChargedAmount, filePath);
             }
@@ -57,7 +66,7 @@
                 throw new ValueNotFoundException(ErrorFieldNames.CommissionDate, filePath);
             }
 
-            return new CommissionFields(chargedAmount, currency, commissionDate);
+            return new CommissionFields(chargedAmount.Value, currency, commissionDate);
         }
 
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
