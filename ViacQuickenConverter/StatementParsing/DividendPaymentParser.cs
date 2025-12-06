@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.StatementParsing.CurrencyConversion;
 using ViacQuickenConverter.StatementParsing.Error;
-using ViacQuickenConverter.StatementParsing.Formatting;
 using ViacQuickenConverter.StatementParsing.Text;
 
 namespace ViacQuickenConverter.StatementParsing
@@ -22,23 +22,22 @@ namespace ViacQuickenConverter.StatementParsing
         {
             var dividendFields = ExtractDividendDetails(text, filePath);
             var units = dividendFields.Amount / dividendFields.Payment;
-            var fileName = Path.GetFileName(filePath);
-            var remark = $"{dividendFields.Type}.";
+            var remark = $"Source file name: {Path.GetFileName(filePath)}. {dividendFields.Type}. ";
             if (dividendFields.Currency == "USD")
             {
+                remark += "No currency conversion was necessary.";
                 return new Dividend(dividendFields.SecurityName,
                                     units,
                                     dividendFields.Payment,
                                     dividendFields.Amount,
                                     dividendFields.Date,
-                                    fileName,
                                     remark);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(dividendFields.Currency, "USD", dividendFields.Date);
             var usdPayment = dividendFields.Payment * exchangeRate;
             var usdAmount = dividendFields.Amount * exchangeRate;
-            remark += $" Converted from {dividendFields.Currency} to USD on {dividendFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+            remark += $"Converted from {dividendFields.Currency} to USD on {dividendFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
                       $"Exchange rate: {exchangeRate:F6}. Original dividend per share: {dividendFields.Payment:F2}, total received dividend: {dividendFields.Amount:F2}.";
 
             return new Dividend(dividendFields.SecurityName,
@@ -46,7 +45,6 @@ namespace ViacQuickenConverter.StatementParsing
                                 usdPayment,
                                 usdAmount,
                                 dividendFields.Date,
-                                fileName,
                                 remark);
         }
 
@@ -194,7 +192,6 @@ namespace ViacQuickenConverter.StatementParsing
     /// <param name="Payment">Dividend per share.</param>
     /// <param name="Amount">Total received dividend.</param>
     /// <param name="Date">The date the dividend was credited to the account.</param>
-    /// <param name="FileName">The name to the source file containing this dividend payment.</param>
     /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary dividend, Refund withholding tax) and currency conversion details if applicable.</param>
     public readonly record struct Dividend(
         string SecurityName,
@@ -202,6 +199,5 @@ namespace ViacQuickenConverter.StatementParsing
         decimal Payment,
         decimal Amount,
         DateTime Date,
-        string FileName,
         string Remark);
 }

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.StatementParsing.CurrencyConversion;
 using ViacQuickenConverter.StatementParsing.Error;
-using ViacQuickenConverter.StatementParsing.Formatting;
 using ViacQuickenConverter.StatementParsing.Text;
 
 namespace ViacQuickenConverter.StatementParsing
@@ -20,27 +20,26 @@ namespace ViacQuickenConverter.StatementParsing
         public async Task<Commission> ParseAsync(string text, string filePath)
         {
             var commissionFields = ExtractCommissionDetails(text, filePath);
-            var fileName = Path.GetFileName(filePath);
+            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (commissionFields.ChargedAmount == 0)
             {
-                return new Commission(commissionFields.ChargedAmount,
-                                      commissionFields.Date,
-                                      fileName,
-                                      "The charged amount is 0. This entry is included for completeness, as some statements may legitimately have a zero commission. " +
-                                      "Please double-check to ensure this is correct.");
+                remark += "The charged amount is 0. This entry is included for completeness, as some statements may legitimately have a zero commission. " +
+                          "Please double-check to ensure this is correct.";
+                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, remark);
             }
 
             if (commissionFields.Currency == "USD")
             {
-                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, fileName);
+                remark += "No currency conversion was necessary.";
+                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, remark);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(commissionFields.Currency, "USD", commissionFields.Date);
             var usdChargedAmount = commissionFields.ChargedAmount * exchangeRate;
-            var remark = $"Converted from {commissionFields.Currency} to USD on {commissionFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                         $"Exchange rate: {exchangeRate:F6}. Charged amount: {commissionFields.ChargedAmount:F2}";
+            remark += $"Converted from {commissionFields.Currency} to USD on {commissionFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+                      $"Exchange rate: {exchangeRate:F6}. Charged amount: {commissionFields.ChargedAmount:F2}";
 
-            return new Commission(usdChargedAmount, commissionFields.Date, fileName, remark);
+            return new Commission(usdChargedAmount, commissionFields.Date, remark);
         }
 
         private static CommissionFields ExtractCommissionDetails(string text, string filePath)
@@ -107,7 +106,6 @@ namespace ViacQuickenConverter.StatementParsing
     /// </summary>
     /// <param name="ChargedAmount">The commission amount charged to the account.</param>
     /// <param name="Date">The date the commission was debited from the account.</param>
-    /// <param name="FileName">The file name of the source statement containing this commission transaction.</param>
-    /// <param name="Remark">Optional notes about the commission, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Commission(decimal ChargedAmount, DateTime Date, string FileName, string? Remark = null);
+    /// <param name="Remark">Notes about the commission, such as currency conversion details, exchange rates, or other relevant remarks.</param>
+    public readonly record struct Commission(decimal ChargedAmount, DateTime Date, string Remark);
 }

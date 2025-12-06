@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.StatementParsing.CurrencyConversion;
 using ViacQuickenConverter.StatementParsing.Error;
-using ViacQuickenConverter.StatementParsing.Formatting;
 using ViacQuickenConverter.StatementParsing.Text;
 
 namespace ViacQuickenConverter.StatementParsing
@@ -20,18 +20,19 @@ namespace ViacQuickenConverter.StatementParsing
         public async Task<Deposit> ParseAsync(string text, string filePath)
         {
             var depositFields = ExtractDepositDetails(text, filePath);
-            var fileName = Path.GetFileName(filePath);
+            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (depositFields.Currency == "USD")
             {
-                return new Deposit(depositFields.Payment, depositFields.Date, fileName);
+                remark += "No currency conversion was necessary.";
+                return new Deposit(depositFields.Payment, depositFields.Date, remark);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(depositFields.Currency, "USD", depositFields.Date);
             var usdPayment = depositFields.Payment * exchangeRate;
-            var remark = $"Converted from {depositFields.Currency} to USD on {depositFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                         $"Exchange rate: {exchangeRate:F6}. Deposited: {depositFields.Payment:F2}";
+            remark += $"Converted from {depositFields.Currency} to USD on {depositFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+                      $"Exchange rate: {exchangeRate:F6}. Deposited: {depositFields.Payment:F2}";
 
-            return new Deposit(usdPayment, depositFields.Date, fileName, remark);
+            return new Deposit(usdPayment, depositFields.Date, remark);
         }
 
         private static DepositFields ExtractDepositDetails(string text, string filePath)
@@ -98,7 +99,6 @@ namespace ViacQuickenConverter.StatementParsing
     /// </summary>
     /// <param name="Payment">The amount received in the deposit transaction.</param>
     /// <param name="Date">The date the deposit was credited to the account.</param>
-    /// <param name="FileName">The file name of the source statement containing this deposit.</param>
-    /// <param name="Remark">Optional notes about the deposit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Deposit(decimal Payment, DateTime Date, string FileName, string? Remark = null);
+    /// <param name="Remark">Notes about the deposit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
+    public readonly record struct Deposit(decimal Payment, DateTime Date, string Remark);
 }

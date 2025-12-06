@@ -1,4 +1,4 @@
-﻿namespace ViacQuickenConverter.StatementParsing.Formatting
+﻿namespace ViacQuickenConverter.Formatting
 {
     public static class DateFormats
     {

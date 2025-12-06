@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.StatementParsing.CurrencyConversion;
 using ViacQuickenConverter.StatementParsing.Error;
-using ViacQuickenConverter.StatementParsing.Formatting;
 using ViacQuickenConverter.StatementParsing.Text;
 
 namespace ViacQuickenConverter.StatementParsing
@@ -22,23 +22,24 @@ namespace ViacQuickenConverter.StatementParsing
         {
             var orderFields = ExtractOrderDetails(text, filePath);
             var units = orderFields.Amount / orderFields.Price;
-            var fileName = Path.GetFileName(filePath);
+            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (orderFields.Currency == "USD")
             {
+                remark += "No currency conversion was necessary.";
                 return new Order(orderFields.SecurityName,
                                  orderFields.Type,
                                  units,
                                  orderFields.Price,
                                  orderFields.Amount,
                                  orderFields.Date,
-                                 fileName);
+                                 remark);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(orderFields.Currency, "USD", orderFields.Date);
             var usdPrice = orderFields.Price * exchangeRate;
             var usdAmount = orderFields.Amount * exchangeRate;
-            var remark = $"Converted from {orderFields.Currency} to USD on {orderFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                         $"Exchange rate: {exchangeRate:F6}. Original share price: {orderFields.Price:F2}, total order amount: {orderFields.Amount:F2}.";
+            remark += $"Converted from {orderFields.Currency} to USD on {orderFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
+                      $"Exchange rate: {exchangeRate:F6}. Original share price: {orderFields.Price:F2}, total order amount: {orderFields.Amount:F2}.";
 
             return new Order(orderFields.SecurityName,
                              orderFields.Type,
@@ -46,7 +47,6 @@ namespace ViacQuickenConverter.StatementParsing
                              usdPrice,
                              usdAmount,
                              orderFields.Date,
-                             fileName,
                              remark);
         }
 
@@ -196,8 +196,7 @@ namespace ViacQuickenConverter.StatementParsing
     /// <param name="Price">Price per unit.</param>
     /// <param name="Amount">Total order amount (price × units).</param>
     /// <param name="Date">The date the order was executed.</param>
-    /// <param name="FileName">The file name of the source statement containing this order transaction.</param>
-    /// <param name="Remark">Optional notes about the order, such as currency conversion details.</param>
+    /// <param name="Remark">Notes about the order, such as currency conversion details.</param>
     public readonly record struct Order(
         string SecurityName,
         OrderType Type,
@@ -205,8 +204,7 @@ namespace ViacQuickenConverter.StatementParsing
         decimal Price,
         decimal Amount,
         DateTime Date,
-        string FileName,
-        string? Remark = null);
+        string Remark);
 
     public enum OrderType
     {
