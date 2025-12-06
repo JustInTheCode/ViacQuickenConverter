@@ -14,8 +14,6 @@ namespace ViacQuickenConverter.Quicken
         public static void Write(List<Order> orders, List<Dividend> dividends, List<Deposit> deposits, List<Interest> interests, List<Commission> commissions)
         {
             var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormats.Standard)}", ".csv");
-            Console.WriteLine("Generating Quicken CSV file...");
-
             using var writer = new StreamWriter(filePath);
             using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
             var rows = new List<QuickenCsvRow>();

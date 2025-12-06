@@ -11,7 +11,7 @@ using ViacQuickenConverter.Viac.CurrencyConversion;
 
 namespace ViacQuickenConverter
 {
-    internal class Program
+    internal static class Program
     {
         private const string ExchangeSettlement = "Exchange Settlement";
 
@@ -29,18 +29,25 @@ namespace ViacQuickenConverter
         {
             try
             {
+                var directoryPath = GetDirectoryPath();
+                var files = Directory.GetFiles(directoryPath, "*.pdf");
+                if (files.Length == 0)
+                {
+                    Console.WriteLine("Directory contains no files. Nothing to do.");
+                    return;
+                }
+
                 using var exchangeRateClient = new ExchangeRateClient();
                 var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
                 var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
                 var depositParser = new DepositParser(exchangeRateClient);
                 var interestParser = new InterestParser(exchangeRateClient);
                 var commissionParser = new CommissionParser(exchangeRateClient);
-                var files = Directory.GetFiles(@"C:\Users\JustinThiede\Downloads\viac_all");
-                List<Order> orders = [];
-                List<Dividend> dividends = [];
-                List<Deposit> deposits = [];
-                List<Interest> interests = [];
                 List<Commission> commissions = [];
+                List<Deposit> deposits = [];
+                List<Dividend> dividends = [];
+                List<Interest> interests = [];
+                List<Order> orders = [];
                 foreach (var file in files)
                 {
                     using var pdf = PdfDocument.Open(file);
@@ -53,76 +60,43 @@ namespace ViacQuickenConverter
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
                     if (text.Contains(ExchangeSettlement))
                     {
-                        Console.WriteLine($"Parsing {ExchangeSettlement}, file: '{file}'.");
-                        orders.Add(await exchangeSettlementParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {ExchangeSettlement}, file: '{file}'.");
+                        orders.Add(await ParseWithLoggingAsync(ExchangeSettlement, file, () => exchangeSettlementParser.ParseAsync(text, file)));
                     }
                     else if (text.Contains(DividendPayment) || text.Contains(TaxRefund))
                     {
-                        Console.WriteLine($"Parsing {DividendPayment}, file: '{file}'.");
-                        dividends.Add(await dividendPaymentParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {DividendPayment}, file: '{file}'.");
+                        dividends.Add(await ParseWithLoggingAsync(DividendPayment, file, () => dividendPaymentParser.ParseAsync(text, file)));
                     }
                     else if (text.Contains(Deposit))
                     {
-                        Console.WriteLine($"Parsing {Deposit}, file: '{file}'.");
-                        deposits.Add(await depositParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {Deposit}, file: '{file}'.");
+                        deposits.Add(await ParseWithLoggingAsync(Deposit, file, () => depositParser.ParseAsync(text, file)));
                     }
                     else if (text.Contains(Interest))
                     {
-                        Console.WriteLine($"Parsing {Interest}, file: '{file}'.");
-                        interests.Add(await interestParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {Interest}, file: '{file}'.");
+                        interests.Add(await ParseWithLoggingAsync(Interest, file, () => interestParser.ParseAsync(text, file)));
                     }
                     else if (text.Contains(Commission))
                     {
-                        Console.WriteLine($"Parsing {Commission}, file: '{file}'.");
-                        commissions.Add(await commissionParser.ParseAsync(text, file));
-                        Console.WriteLine($"Parsed {Commission}, file: '{file}'.");
+                        commissions.Add(await ParseWithLoggingAsync(Commission, file, () => commissionParser.ParseAsync(text, file)));
                     }
                     else
                     {
-                        Console.WriteLine($"Skipping unsupported file: '{file}'. File is not a recognized statement type. " +
-                                          $"Supported types: {ExchangeSettlement}, {DividendPayment}, {TaxRefund}, {Deposit}, {Interest}, {Commission}.");
+                        Console.WriteLine($"Skipping file '{file}' — unrecognized statement type.");
                     }
                 }
 
-                foreach (var order in orders)
-                {
-                    Console.WriteLine(order);
-                }
+                const int labelWidth = 22;
+                Console.WriteLine($"{Environment.NewLine}Parsed Viac Statements:");
+                Console.WriteLine($"  {"Exchange Settlements:",-labelWidth} {orders.Count}");
+                Console.WriteLine($"  {"Dividend Payments:",-labelWidth} {dividends.Count}");
+                Console.WriteLine($"  {"Deposits:",-labelWidth} {deposits.Count}");
+                Console.WriteLine($"  {"Interests:",-labelWidth} {interests.Count}");
+                Console.WriteLine($"  {"Commissions:",-labelWidth} {commissions.Count}");
+                Console.WriteLine($"  {"Total",-labelWidth} {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count}");
 
-                foreach (var dividend in dividends)
-                {
-                    Console.WriteLine(dividend);
-                }
-
-                foreach (var deposit in deposits)
-                {
-                    Console.WriteLine(deposit);
-                }
-
-                foreach (var interest in interests)
-                {
-                    Console.WriteLine(interest);
-                }
-
-                foreach (var commission in commissions)
-                {
-                    Console.WriteLine(commission);
-                }
-
-                Console.WriteLine($"Parsed {orders.Count} {ExchangeSettlement} statements.");
-                Console.WriteLine($"Parsed {dividends.Count} {DividendPayment} statements.");
-                Console.WriteLine($"Parsed {deposits.Count} {Deposit} statements.");
-                Console.WriteLine($"Parsed {interests.Count} {Interest} statements.");
-                Console.WriteLine($"Parsed {commissions.Count} {Commission} statements.");
-                Console.WriteLine($"Parsed {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count} files.");
-
+                Console.WriteLine($"{Environment.NewLine}Generating Quicken CSV file...");
                 QuickenCsvWriter.Write(orders, dividends, deposits, interests, commissions);
 
-                Console.WriteLine("Done. Press any key to exit.");
+                Console.WriteLine($"{Environment.NewLine}Done. Press any key to exit.");
                 Console.ReadKey(true);
             }
             catch (Exception exception)
@@ -134,6 +108,30 @@ namespace ViacQuickenConverter
 
                 Console.WriteLine(exception.Message);
             }
+        }
+
+        private static string GetDirectoryPath()
+        {
+            while (true)
+            {
+                Console.WriteLine("Enter directory path to read Viac statements from: ");
+                var directoryPath = Console.ReadLine();
+                if (Directory.Exists(directoryPath))
+                {
+                    return directoryPath;
+                }
+
+                Console.WriteLine("Directory doesn't exist. Please try again.");
+            }
+        }
+
+        private static async Task<T> ParseWithLoggingAsync<T>(string type, string file, Func<Task<T>> parseFunc)
+        {
+            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{file}'.");
+            var result = await parseFunc();
+            Console.WriteLine($"Parsed {type}, file: '{file}'.");
+
+            return result;
         }
 
         private class InvalidPageCountException : Exception
