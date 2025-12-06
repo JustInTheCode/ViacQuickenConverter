@@ -13,6 +13,7 @@
         {
             var orderFields = ExtractOrderDetails(text, filePath);
             var units = orderFields.Amount / orderFields.Price;
+            var fileName = Path.GetFileName(filePath);
             if (orderFields.Currency == "USD")
             {
                 return new Order(orderFields.SecurityName,
@@ -21,7 +22,7 @@
                                  orderFields.Price,
                                  orderFields.Amount,
                                  orderFields.Date,
-                                 filePath);
+                                 fileName);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(orderFields.Currency, "USD", orderFields.Date);
@@ -36,7 +37,7 @@
                              usdPrice,
                              usdAmount,
                              orderFields.Date,
-                             filePath,
+                             fileName,
                              remark);
         }
 
@@ -186,7 +187,7 @@
     /// <param name="Price">Price per unit.</param>
     /// <param name="Amount">Total order amount (price × units).</param>
     /// <param name="Date">The date the order was executed.</param>
-    /// <param name="FilePath">The path to the source file containing this order.</param>
+    /// <param name="FileName">The file name of the source statement containing this order transaction.</param>
     /// <param name="Remark">Optional notes about the order, such as currency conversion details.</param>
     public readonly record struct Order(
         string SecurityName,
@@ -195,7 +196,7 @@
         decimal Price,
         decimal Amount,
         DateTime Date,
-        string FilePath,
+        string FileName,
         string? Remark = null);
 
     public enum OrderType

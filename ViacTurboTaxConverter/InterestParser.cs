@@ -12,6 +12,7 @@
         public async Task<Interest> ParseAsync(string text, string filePath)
         {
             var interestFields = ExtractInterestDetails(text, filePath);
+            var fileName = Path.GetFileName(filePath);
             if (interestFields.Credit == 0)
             {
                 return new Interest(interestFields.Credit,
@@ -23,7 +24,7 @@
 
             if (interestFields.Currency == "USD")
             {
-                return new Interest(interestFields.Credit, interestFields.Date, filePath);
+                return new Interest(interestFields.Credit, interestFields.Date, fileName);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(interestFields.Currency, "USD", interestFields.Date);
@@ -31,7 +32,7 @@
             var remark = $"Converted from {interestFields.Currency} to USD on {interestFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
                          $"Exchange rate: {exchangeRate:F6}. Interest credit: {interestFields.Credit:F2}";
 
-            return new Interest(usdCredit, interestFields.Date, filePath, remark);
+            return new Interest(usdCredit, interestFields.Date, fileName, remark);
         }
 
         private static InterestFields ExtractInterestDetails(string text, string filePath)
@@ -98,7 +99,7 @@
     /// </summary>
     /// <param name="Credit">The interest amount credited to the account.</param>
     /// <param name="Date">The date the interest was credited to the account.</param>
-    /// <param name="FilePath">The file path of the source statement containing this interest transaction.</param>
+    /// <param name="FileName">The file name of the source statement containing this interest transaction.</param>
     /// <param name="Remark">Optional notes about the interest credit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Interest(decimal Credit, DateTime Date, string FilePath, string? Remark = null);
+    public readonly record struct Interest(decimal Credit, DateTime Date, string FileName, string? Remark = null);
 }

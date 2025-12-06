@@ -13,6 +13,7 @@
         {
             var dividendFields = ExtractDividendDetails(text, filePath);
             var units = dividendFields.Amount / dividendFields.Payment;
+            var fileName = Path.GetFileName(filePath);
             var remark = $"{dividendFields.Type}.";
             if (dividendFields.Currency == "USD")
             {
@@ -21,7 +22,7 @@
                                     dividendFields.Payment,
                                     dividendFields.Amount,
                                     dividendFields.Date,
-                                    filePath,
+                                    fileName,
                                     remark);
             }
 
@@ -36,7 +37,7 @@
                                 usdPayment,
                                 usdAmount,
                                 dividendFields.Date,
-                                filePath,
+                                fileName,
                                 remark);
         }
 
@@ -184,7 +185,7 @@
     /// <param name="Payment">Dividend per share.</param>
     /// <param name="Amount">Total received dividend.</param>
     /// <param name="Date">The date the dividend was credited to the account.</param>
-    /// <param name="FilePath">The path to the source file containing this dividend payment.</param>
+    /// <param name="FileName">The name to the source file containing this dividend payment.</param>
     /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary dividend, Refund withholding tax) and currency conversion details if applicable.</param>
     public readonly record struct Dividend(
         string SecurityName,
@@ -192,6 +193,6 @@
         decimal Payment,
         decimal Amount,
         DateTime Date,
-        string FilePath,
+        string FileName,
         string Remark);
 }

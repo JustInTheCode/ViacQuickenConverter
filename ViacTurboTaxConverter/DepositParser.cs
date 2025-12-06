@@ -12,9 +12,10 @@
         public async Task<Deposit> ParseAsync(string text, string filePath)
         {
             var depositFields = ExtractDepositDetails(text, filePath);
+            var fileName = Path.GetFileName(filePath);
             if (depositFields.Currency == "USD")
             {
-                return new Deposit(depositFields.Payment, depositFields.Date, filePath);
+                return new Deposit(depositFields.Payment, depositFields.Date, fileName);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(depositFields.Currency, "USD", depositFields.Date);
@@ -22,7 +23,7 @@
             var remark = $"Converted from {depositFields.Currency} to USD on {depositFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
                          $"Exchange rate: {exchangeRate:F6}. Deposited: {depositFields.Payment:F2}";
 
-            return new Deposit(usdPayment, depositFields.Date, filePath, remark);
+            return new Deposit(usdPayment, depositFields.Date, fileName, remark);
         }
 
         private static DepositFields ExtractDepositDetails(string text, string filePath)
@@ -89,7 +90,7 @@
     /// </summary>
     /// <param name="Payment">The amount received in the deposit transaction.</param>
     /// <param name="Date">The date the deposit was credited to the account.</param>
-    /// <param name="FilePath">The file path of the source statement containing this deposit.</param>
+    /// <param name="FileName">The file name of the source statement containing this deposit.</param>
     /// <param name="Remark">Optional notes about the deposit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Deposit(decimal Payment, DateTime Date, string FilePath, string? Remark = null);
+    public readonly record struct Deposit(decimal Payment, DateTime Date, string FileName, string? Remark = null);
 }
