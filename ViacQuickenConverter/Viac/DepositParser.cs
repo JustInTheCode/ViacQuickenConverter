@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 using ViacQuickenConverter.Viac.Error;
 using ViacQuickenConverter.Viac.Text;
@@ -20,17 +18,14 @@ namespace ViacQuickenConverter.Viac
         public async Task<Deposit> ParseAsync(string text, string filePath)
         {
             var depositFields = ExtractDepositDetails(text, filePath);
-            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (depositFields.Currency == "USD")
             {
-                remark += "No currency conversion was necessary.";
-                return new Deposit(depositFields.Payment, depositFields.Date, remark);
+                return new Deposit(depositFields.Payment, depositFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(depositFields.Currency, "USD", depositFields.Date);
             var usdPayment = depositFields.Payment * exchangeRate;
-            remark += $"Converted from {depositFields.Currency} to USD on {depositFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                      $"Exchange rate: {exchangeRate:F6}. Deposited: {depositFields.Payment:F2}";
+            var remark = $"{depositFields.Currency}-USD ({exchangeRate:F6}), Amt: {depositFields.Payment:F2}";
 
             return new Deposit(usdPayment, depositFields.Date, remark);
         }
@@ -99,6 +94,6 @@ namespace ViacQuickenConverter.Viac
     /// </summary>
     /// <param name="Payment">The amount received in the deposit transaction.</param>
     /// <param name="Date">The date the deposit was credited to the account.</param>
-    /// <param name="Remark">Notes about the deposit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Deposit(decimal Payment, DateTime Date, string Remark);
+    /// <param name="Remark">Notes about the currency conversion.</param>
+    public readonly record struct Deposit(decimal Payment, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
 }

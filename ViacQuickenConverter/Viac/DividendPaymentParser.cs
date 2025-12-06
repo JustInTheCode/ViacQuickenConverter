@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 using ViacQuickenConverter.Viac.Error;
 using ViacQuickenConverter.Viac.Text;
@@ -22,24 +20,21 @@ namespace ViacQuickenConverter.Viac
         {
             var dividendFields = ExtractDividendDetails(text, filePath);
             var units = dividendFields.Amount / dividendFields.Payment;
-            var remark = $"Source file name: {Path.GetFileName(filePath)}. {dividendFields.Type}. ";
             if (dividendFields.Currency == "USD")
             {
-                remark += "No currency conversion was necessary.";
                 return new Dividend(dividendFields.SecurityName,
                                     dividendFields.Isin,
                                     units,
                                     dividendFields.Payment,
                                     dividendFields.Amount,
                                     dividendFields.Date,
-                                    remark);
+                                    $"Already in USD, no currency conversion necessary, Type: {dividendFields.Type}");
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(dividendFields.Currency, "USD", dividendFields.Date);
             var usdPayment = dividendFields.Payment * exchangeRate;
             var usdAmount = dividendFields.Amount * exchangeRate;
-            remark += $"Converted from {dividendFields.Currency} to USD on {dividendFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                      $"Exchange rate: {exchangeRate:F6}. Original dividend per share: {dividendFields.Payment:F2}, total received dividend: {dividendFields.Amount:F2}.";
+            var remark = $"{dividendFields.Currency}-USD ({exchangeRate:F6}), Amt: {dividendFields.Amount:F2}, Type: {dividendFields.Type}";
 
             return new Dividend(dividendFields.SecurityName,
                                 dividendFields.Isin,
@@ -136,8 +131,17 @@ namespace ViacQuickenConverter.Viac
             var dividendLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
             var dividendType = string.Join(" ", dividendLineComponents.Skip(3));
             string[] supportedTypes = ["Ordinary dividend", "Refund withholding tax"];
+            if (dividendType == "Ordinary dividend")
+            {
+                return "Ordinary";
+            }
 
-            return supportedTypes.Contains(dividendType) ? dividendType : throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, supportedTypes);
+            if (dividendType == "Refund withholding tax")
+            {
+                return "Tax Refund";
+            }
+
+            throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, supportedTypes);
         }
 
         private static string GetSecurityName(string line)
@@ -214,7 +218,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Payment">Dividend per share.</param>
     /// <param name="Amount">Total received dividend.</param>
     /// <param name="Date">The date the dividend was credited to the account.</param>
-    /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary dividend, Refund withholding tax) and currency conversion details if applicable.</param>
+    /// <param name="Remark">Notes about the dividend payment, including the type (e.g., Ordinary, Tax Refund) and currency conversion.</param>
     public readonly record struct Dividend(
         string SecurityName,
         string Isin,

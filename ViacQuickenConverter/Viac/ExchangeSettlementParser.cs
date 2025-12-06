@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 using ViacQuickenConverter.Viac.Error;
 using ViacQuickenConverter.Viac.Text;
@@ -22,25 +20,21 @@ namespace ViacQuickenConverter.Viac
         {
             var orderFields = ExtractOrderDetails(text, filePath);
             var units = orderFields.Amount / orderFields.Price;
-            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (orderFields.Currency == "USD")
             {
-                remark += "No currency conversion was necessary.";
                 return new Order(orderFields.SecurityName,
                                  orderFields.Isin,
                                  orderFields.Type,
                                  units,
                                  orderFields.Price,
                                  orderFields.Amount,
-                                 orderFields.Date,
-                                 remark);
+                                 orderFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(orderFields.Currency, "USD", orderFields.Date);
             var usdPrice = orderFields.Price * exchangeRate;
             var usdAmount = orderFields.Amount * exchangeRate;
-            remark += $"Converted from {orderFields.Currency} to USD on {orderFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                      $"Exchange rate: {exchangeRate:F6}. Original share price: {orderFields.Price:F2}, total order amount: {orderFields.Amount:F2}.";
+            var remark = $"{orderFields.Currency}-USD ({exchangeRate:F6}), Price: {orderFields.Price:F2}, Amt: {orderFields.Amount:F2}";
 
             return new Order(orderFields.SecurityName,
                              orderFields.Isin,
@@ -218,7 +212,7 @@ namespace ViacQuickenConverter.Viac
     /// <param name="Price">Price per unit.</param>
     /// <param name="Amount">Total order amount (price × units).</param>
     /// <param name="Date">The date the order was executed.</param>
-    /// <param name="Remark">Notes about the order, such as currency conversion details.</param>
+    /// <param name="Remark">Notes about the currency conversion.</param>
     public readonly record struct Order(
         string SecurityName,
         string Isin,
@@ -227,7 +221,7 @@ namespace ViacQuickenConverter.Viac
         decimal Price,
         decimal Amount,
         DateTime Date,
-        string Remark);
+        string Remark = "Already in USD, no currency conversion necessary");
 
     public enum OrderType
     {

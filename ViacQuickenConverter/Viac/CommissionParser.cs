@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 using ViacQuickenConverter.Viac.Error;
 using ViacQuickenConverter.Viac.Text;
@@ -20,24 +18,19 @@ namespace ViacQuickenConverter.Viac
         public async Task<Commission> ParseAsync(string text, string filePath)
         {
             var commissionFields = ExtractCommissionDetails(text, filePath);
-            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (commissionFields.ChargedAmount == 0)
             {
-                remark += "The charged amount is 0. This entry is included for completeness, as some statements may legitimately have a zero commission. " +
-                          "Please double-check to ensure this is correct.";
-                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, remark);
+                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, "Amount is zero, no currency conversion necessary");
             }
 
             if (commissionFields.Currency == "USD")
             {
-                remark += "No currency conversion was necessary.";
-                return new Commission(commissionFields.ChargedAmount, commissionFields.Date, remark);
+                return new Commission(commissionFields.ChargedAmount, commissionFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(commissionFields.Currency, "USD", commissionFields.Date);
             var usdChargedAmount = commissionFields.ChargedAmount * exchangeRate;
-            remark += $"Converted from {commissionFields.Currency} to USD on {commissionFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                      $"Exchange rate: {exchangeRate:F6}. Charged amount: {commissionFields.ChargedAmount:F2}";
+            var remark = $"{commissionFields.Currency}-USD ({exchangeRate:F6}), Amt: {commissionFields.ChargedAmount:F2}";
 
             return new Commission(usdChargedAmount, commissionFields.Date, remark);
         }
@@ -106,6 +99,6 @@ namespace ViacQuickenConverter.Viac
     /// </summary>
     /// <param name="ChargedAmount">The commission amount charged to the account.</param>
     /// <param name="Date">The date the commission was debited from the account.</param>
-    /// <param name="Remark">Notes about the commission, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Commission(decimal ChargedAmount, DateTime Date, string Remark);
+    /// <param name="Remark">Notes about the currency conversion.</param>
+    public readonly record struct Commission(decimal ChargedAmount, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
 }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac.CurrencyConversion;
 using ViacQuickenConverter.Viac.Error;
 using ViacQuickenConverter.Viac.Text;
@@ -20,24 +18,19 @@ namespace ViacQuickenConverter.Viac
         public async Task<Interest> ParseAsync(string text, string filePath)
         {
             var interestFields = ExtractInterestDetails(text, filePath);
-            var remark = $"Source file name: {Path.GetFileName(filePath)}. ";
             if (interestFields.Credit == 0)
             {
-                remark += "Interest credited is 0. This entry is included for completeness, as some statements may legitimately have zero interest credited. " +
-                          "Please double-check to ensure this is correct.";
-                return new Interest(interestFields.Credit, interestFields.Date, remark);
+                return new Interest(interestFields.Credit, interestFields.Date, "Amount is zero, no currency conversion necessary");
             }
 
             if (interestFields.Currency == "USD")
             {
-                remark += "No currency conversion was necessary.";
-                return new Interest(interestFields.Credit, interestFields.Date, remark);
+                return new Interest(interestFields.Credit, interestFields.Date);
             }
 
             var exchangeRate = await _exchangeRateClient.GetExchangeRateAsync(interestFields.Currency, "USD", interestFields.Date);
             var usdCredit = interestFields.Credit * exchangeRate;
-            remark += $"Converted from {interestFields.Currency} to USD on {interestFields.Date.ToString(DateFormats.Standard)} ({DateFormats.Standard}). " +
-                      $"Exchange rate: {exchangeRate:F6}. Interest credit: {interestFields.Credit:F2}";
+            var remark = $"{interestFields.Currency}-USD ({exchangeRate:F6}), Amt: {interestFields.Credit:F2}";
 
             return new Interest(usdCredit, interestFields.Date, remark);
         }
@@ -106,6 +99,6 @@ namespace ViacQuickenConverter.Viac
     /// </summary>
     /// <param name="Credit">The interest amount credited to the account.</param>
     /// <param name="Date">The date the interest was credited to the account.</param>
-    /// <param name="Remark">Notes about the interest credit, such as currency conversion details, exchange rates, or other relevant remarks.</param>
-    public readonly record struct Interest(decimal Credit, DateTime Date, string Remark);
+    /// <param name="Remark">Notes about the currency conversion.</param>
+    public readonly record struct Interest(decimal Credit, DateTime Date, string Remark = "Already in USD, no currency conversion necessary");
 }
