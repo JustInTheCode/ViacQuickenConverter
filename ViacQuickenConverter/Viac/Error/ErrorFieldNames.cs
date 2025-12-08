@@ -8,13 +8,23 @@
 
         public const string SecurityName = "security name";
 
+        public const string OldSecurityName = "old security name";
+
+        public const string NewSecurityName = "new security name";
+
         public const string Isin = "ISIN";
+
+        public const string OldIsin = "old ISIN";
+
+        public const string NewIsin = "new ISIN";
 
         public const string Price = "price";
 
         public const string Currency = "currency";
 
         public const string Amount = "amount";
+
+        public const string Ratio = "ratio";
 
         public const string OrderDate = "order date";
 
@@ -24,9 +34,11 @@
 
         public const string InterestDate = "interest date";
 
-        public const string DividendType = "dividend type";
+        public const string CommissionDate = "commission date";
 
-        public const string CommissionDate = "commission type";
+        public const string MergerDate = "merger date";
+
+        public const string DividendType = "dividend type";
 
         public const string Payment = "payment";
 

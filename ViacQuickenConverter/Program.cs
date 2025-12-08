@@ -25,6 +25,8 @@ namespace ViacQuickenConverter
 
         private const string Commission = "Commission";
 
+        private const string Merger = "Exchange Settlement Fund Fusion";
+
         public static async Task Main(string[] _)
         {
             try
@@ -48,6 +50,7 @@ namespace ViacQuickenConverter
                 List<Dividend> dividends = [];
                 List<Interest> interests = [];
                 List<Order> orders = [];
+                List<Merger> mergers = [];
                 foreach (var file in files)
                 {
                     using var pdf = PdfDocument.Open(file);
@@ -58,7 +61,11 @@ namespace ViacQuickenConverter
                     }
 
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
-                    if (text.Contains(ExchangeSettlement))
+                    if (text.Contains(Merger))
+                    {
+                        mergers.Add(ParseWithLogging(Merger, file, () => MergerParser.Parse(text, file)));
+                    }
+                    else if (text.Contains(ExchangeSettlement))
                     {
                         orders.Add(await ParseWithLoggingAsync(ExchangeSettlement, file, () => exchangeSettlementParser.ParseAsync(text, file)));
                     }
@@ -91,7 +98,8 @@ namespace ViacQuickenConverter
                 Console.WriteLine($"  {"Deposits:",-labelWidth} {deposits.Count}");
                 Console.WriteLine($"  {"Interests:",-labelWidth} {interests.Count}");
                 Console.WriteLine($"  {"Commissions:",-labelWidth} {commissions.Count}");
-                Console.WriteLine($"  {"Total",-labelWidth} {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count}");
+                Console.WriteLine($"  {"Mergers:",-labelWidth} {mergers.Count}");
+                Console.WriteLine($"  {"Total",-labelWidth} {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count}");
 
                 Console.WriteLine($"{Environment.NewLine}Generating Quicken CSV file...");
                 QuickenCsvWriter.Write(orders, dividends, deposits, interests, commissions);
@@ -129,6 +137,15 @@ namespace ViacQuickenConverter
         {
             Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{file}'.");
             var result = await parseFunc();
+            Console.WriteLine($"Parsed {type}, file: '{file}'.");
+
+            return result;
+        }
+
+        private static T ParseWithLogging<T>(string type, string file, Func<T> parseFunc)
+        {
+            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{file}'.");
+            var result = parseFunc();
             Console.WriteLine($"Parsed {type}, file: '{file}'.");
 
             return result;
