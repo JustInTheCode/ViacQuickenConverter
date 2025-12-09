@@ -101,8 +101,22 @@ namespace ViacQuickenConverter
                 Console.WriteLine($"  {"Mergers:",-labelWidth} {mergers.Count}");
                 Console.WriteLine($"  {"Total",-labelWidth} {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count}");
 
+                if (mergers.Count > 0)
+                {
+                    Console.WriteLine($"""
+                                       {Environment.NewLine}Merger detected.
+                                       Share quantities for fund fusions are computed based on all exchange settlements.
+                                       If any relevant statements are missing, the merger result will be incorrect.
+                                       """);
+                }
+
                 Console.WriteLine($"{Environment.NewLine}Generating Quicken CSV file...");
-                QuickenCsvWriter.Write(orders, dividends, deposits, interests, commissions);
+                QuickenCsvWriter.Write(orders,
+                                       dividends,
+                                       deposits,
+                                       interests,
+                                       commissions,
+                                       mergers);
 
                 Console.WriteLine($"{Environment.NewLine}Done. Press any key to exit.");
                 Console.ReadKey(true);

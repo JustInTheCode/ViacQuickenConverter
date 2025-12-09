@@ -11,7 +11,12 @@ namespace ViacQuickenConverter.Quicken
 {
     public static class QuickenCsvWriter
     {
-        public static void Write(List<Order> orders, List<Dividend> dividends, List<Deposit> deposits, List<Interest> interests, List<Commission> commissions)
+        public static void Write(List<Order> orders,
+                                 List<Dividend> dividends,
+                                 List<Deposit> deposits,
+                                 List<Interest> interests,
+                                 List<Commission> commissions,
+                                 List<Merger> mergers)
         {
             var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormats.Standard)}", ".csv");
             using var writer = new StreamWriter(filePath);
@@ -22,6 +27,7 @@ namespace ViacQuickenConverter.Quicken
             rows.AddRange(ConvertDeposits(deposits));
             rows.AddRange(ConvertInterests(interests));
             rows.AddRange(ConvertCommissions(commissions));
+            rows.AddRange(ConvertMergers(mergers, orders));
             csv.WriteRecords(rows);
 
             Console.WriteLine($"Rows written: {rows.Count}");
@@ -96,6 +102,36 @@ namespace ViacQuickenConverter.Quicken
                                                         Memo = commission.Remark,
                                                         Category = "Financial:Financial Advisor",
                                                     });
+        }
+
+        private static IEnumerable<QuickenCsvRow> ConvertMergers(List<Merger> mergers, List<Order> orders)
+        {
+            foreach (var merger in mergers)
+            {
+                var mergerDate = merger.Date.ToString(DateFormats.Standard);
+                var account = $"VIAC 3a ({merger.PortfolioNumber})";
+                var sharesToRemove = orders.Where(order => order.Isin == merger.OldIsin).Sum(order => order.Units);
+                yield return new QuickenCsvRow
+                             {
+                                 Action = "Removed",
+                                 Date = mergerDate,
+                                 Account = account,
+                                 Security = merger.OldSecurityName,
+                                 OptionalSymbol = merger.OldIsin,
+                                 Shares = sharesToRemove,
+                             };
+
+                var sharesToAdd = sharesToRemove * merger.ConversionRatio;
+                yield return new QuickenCsvRow
+                             {
+                                 Action = "Added",
+                                 Date = mergerDate,
+                                 Account = account,
+                                 Security = merger.NewSecurityName,
+                                 OptionalSymbol = merger.NewIsin,
+                                 Shares = sharesToAdd,
+                             };
+            }
         }
 
         private static string GetUniqueFilePath(string directory, string baseName, string extension)

@@ -5,13 +5,14 @@ using ViacQuickenConverter.Viac.Text;
 
 namespace ViacQuickenConverter.Viac
 {
-    public partial class MergerParser
+    public static partial class MergerParser
     {
         public static Merger Parse(string text, string filePath)
         {
             string? portfolioNumber = null;
             DateTime mergerDate = default;
-            decimal? ratio = null;
+            decimal? oldRatioUnits = null;
+            decimal? newRatioUnits = null;
             string? oldSecurityName = null;
             string? oldIsin = null;
             string? newSecurityName = null;
@@ -30,7 +31,8 @@ namespace ViacQuickenConverter.Viac
                 }
                 else if (line.StartsWith("Ratio:"))
                 {
-                    ratio = GetRatio(line);
+                    oldRatioUnits = GetOldRatioUnits(line);
+                    newRatioUnits = GetNewRatioUnits(lines[lineCount + 2]);
                 }
                 else if (line.StartsWith("We take from your portfolio:"))
                 {
@@ -71,9 +73,14 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.OldIsin, filePath);
             }
 
-            if (ratio is null)
+            if (oldRatioUnits is null)
             {
-                throw new ValueNotFoundException(ErrorFieldNames.Ratio, filePath);
+                throw new ValueNotFoundException(ErrorFieldNames.OldRatioUnits, filePath);
+            }
+
+            if (newRatioUnits is null)
+            {
+                throw new ValueNotFoundException(ErrorFieldNames.NewRatioUnits, filePath);
             }
 
             if (mergerDate == default)
@@ -86,7 +93,7 @@ namespace ViacQuickenConverter.Viac
                               oldIsin,
                               newSecurityName,
                               newIsin,
-                              ratio.Value,
+                              newRatioUnits.Value / oldRatioUnits.Value,
                               mergerDate);
         }
 
@@ -108,13 +115,22 @@ namespace ViacQuickenConverter.Viac
                        throw new ValueInvalidException(ErrorFieldNames.MergerDate, line, expectedWordNumber, mergerDateString);
         }
 
-        private static decimal GetRatio(string line)
+        private static decimal GetOldRatioUnits(string line)
         {
-            const int expectedWordNumber = 2;
+            const int expectedWordNumber = 3;
             var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
             var ratioString = portfolioNumberLineComponents[1];
 
-            return decimal.TryParse(ratioString, out var ratio) ? ratio : throw new ValueInvalidException(ErrorFieldNames.Ratio, line, expectedWordNumber, ratioString);
+            return decimal.TryParse(ratioString, out var ratio) ? ratio : throw new ValueInvalidException(ErrorFieldNames.OldRatioUnits, line, expectedWordNumber, ratioString);
+        }
+
+        private static decimal GetNewRatioUnits(string line)
+        {
+            const int expectedWordNumber = 2;
+            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
+            var ratioString = portfolioNumberLineComponents[0];
+
+            return decimal.TryParse(ratioString, out var ratio) ? ratio : throw new ValueInvalidException(ErrorFieldNames.OldRatioUnits, line, expectedWordNumber, ratioString);
         }
 
         private static string GetSecurityName(string line)
@@ -149,6 +165,6 @@ namespace ViacQuickenConverter.Viac
         string OldIsin,
         string NewSecurityName,
         string NewIsin,
-        decimal Ratio,
+        decimal ConversionRatio,
         DateTime Date);
 }

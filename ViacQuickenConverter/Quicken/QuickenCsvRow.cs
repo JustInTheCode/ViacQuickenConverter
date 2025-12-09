@@ -27,7 +27,7 @@ namespace ViacQuickenConverter.Quicken
         public decimal? Price { get; set; }
 
         [Name("amount")]
-        public required decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
 
         [Name("commissionFee")]
         public decimal? CommissionFee { get; set; }

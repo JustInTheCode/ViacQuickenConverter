@@ -24,7 +24,9 @@
 
         public const string Amount = "amount";
 
-        public const string Ratio = "ratio";
+        public const string OldRatioUnits = "old ratio units";
+
+        public const string NewRatioUnits = "new ratio units";
 
         public const string OrderDate = "order date";
 
