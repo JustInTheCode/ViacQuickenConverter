@@ -18,30 +18,101 @@ namespace ViacQuickenConverter.Quicken
                                  List<Commission> commissions,
                                  List<Merger> mergers)
         {
+            var securityNameByIsin = CreateIsinSecurityNameMap(orders, dividends, mergers);
             var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormats.Standard)}", ".csv");
             using var writer = new StreamWriter(filePath);
             using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
             var rows = new List<QuickenCsvRow>();
-            rows.AddRange(ConvertOrders(orders));
-            rows.AddRange(ConvertDividends(dividends));
+            rows.AddRange(ConvertOrders(orders, securityNameByIsin));
+            rows.AddRange(ConvertDividends(dividends, securityNameByIsin));
             rows.AddRange(ConvertDeposits(deposits));
             rows.AddRange(ConvertInterests(interests));
             rows.AddRange(ConvertCommissions(commissions));
-            rows.AddRange(ConvertMergers(mergers, orders));
+            rows.AddRange(ConvertMergers(mergers, orders, securityNameByIsin));
             csv.WriteRecords(rows);
 
             Console.WriteLine($"Rows written: {rows.Count}");
             Console.WriteLine($"File saved to: {filePath}");
         }
 
-        private static IEnumerable<QuickenCsvRow> ConvertOrders(IEnumerable<Order> orders)
+        private static Dictionary<string, string> CreateIsinSecurityNameMap(List<Order> orders, List<Dividend> dividends, List<Merger> mergers)
+        {
+            var securityNameAndDateByIsin = new Dictionary<string, (string SecurityName, DateTime Date)>();
+            foreach (var order in orders)
+            {
+                UpdateSecurityName(securityNameAndDateByIsin, order.Isin, order.SecurityName, order.Date);
+            }
+
+            foreach (var dividend in dividends)
+            {
+                UpdateSecurityName(securityNameAndDateByIsin, dividend.Isin, dividend.SecurityName, dividend.Date);
+            }
+
+            foreach (var merger in mergers)
+            {
+                UpdateSecurityName(securityNameAndDateByIsin, merger.OldIsin, merger.OldSecurityName, merger.Date);
+                UpdateSecurityName(securityNameAndDateByIsin, merger.NewIsin, merger.NewSecurityName, merger.Date);
+            }
+
+            HashSet<string> uniqueSecurityNames = [];
+            List<string> duplicateSecurityNames = [];
+            foreach (var (securityName, _) in securityNameAndDateByIsin.Values)
+            {
+                if (!uniqueSecurityNames.Add(securityName))
+                {
+                    duplicateSecurityNames.Add(securityName);
+                }
+            }
+
+            var securityNameByIsin = securityNameAndDateByIsin.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.SecurityName);
+            if (duplicateSecurityNames.Count == 0)
+            {
+                return securityNameByIsin;
+            }
+
+            foreach (var duplicateSecurityName in duplicateSecurityNames)
+            {
+                DateTime? oldestDate = null;
+                var isinToUpdate = string.Empty;
+                foreach (var (isin, (securityName, date)) in securityNameAndDateByIsin)
+                {
+                    if (securityName != duplicateSecurityName)
+                    {
+                        continue;
+                    }
+
+                    if (oldestDate == null || date < oldestDate)
+                    {
+                        oldestDate = date;
+                        isinToUpdate = isin;
+                    }
+                }
+
+                securityNameByIsin[isinToUpdate] = $"{duplicateSecurityName} (old)";
+            }
+
+            return securityNameByIsin;
+
+            static void UpdateSecurityName(Dictionary<string, (string SecurityName, DateTime Date)> isinNameMap,
+                                           string transactionIsin,
+                                           string transactionSecurityName,
+                                           DateTime transactionDate)
+            {
+                if (!isinNameMap.TryGetValue(transactionIsin, out var value) || (transactionDate > value.Date && transactionSecurityName != value.SecurityName))
+                {
+                    isinNameMap[transactionIsin] = (transactionSecurityName, transactionDate);
+                }
+            }
+        }
+
+        private static IEnumerable<QuickenCsvRow> ConvertOrders(IEnumerable<Order> orders, Dictionary<string, string> securityNameByIsin)
         {
             return orders.Select(order => new QuickenCsvRow
                                           {
                                               Action = order.Type == OrderType.Buy ? "Bought" : "Sold",
                                               Date = order.Date.ToString(DateFormats.Standard),
                                               Account = $"VIAC 3a ({order.PortfolioNumber})",
-                                              Security = order.SecurityName,
+                                              Security = securityNameByIsin[order.Isin],
                                               OptionalSymbol = order.Isin,
                                               Shares = order.Units,
                                               Price = order.Price,
@@ -50,14 +121,14 @@ namespace ViacQuickenConverter.Quicken
                                           });
         }
 
-        private static IEnumerable<QuickenCsvRow> ConvertDividends(IEnumerable<Dividend> dividends)
+        private static IEnumerable<QuickenCsvRow> ConvertDividends(IEnumerable<Dividend> dividends, Dictionary<string, string> securityNameByIsin)
         {
             return dividends.Select(dividend => new QuickenCsvRow
                                                 {
                                                     Action = "Div",
                                                     Date = dividend.Date.ToString(DateFormats.Standard),
                                                     Account = $"VIAC 3a ({dividend.PortfolioNumber})",
-                                                    Security = dividend.SecurityName,
+                                                    Security = securityNameByIsin[dividend.Isin],
                                                     OptionalSymbol = dividend.Isin,
                                                     Shares = dividend.Units,
                                                     Price = dividend.Payment,
@@ -104,7 +175,7 @@ namespace ViacQuickenConverter.Quicken
                                                     });
         }
 
-        private static IEnumerable<QuickenCsvRow> ConvertMergers(List<Merger> mergers, List<Order> orders)
+        private static IEnumerable<QuickenCsvRow> ConvertMergers(List<Merger> mergers, List<Order> orders, Dictionary<string, string> securityNameByIsin)
         {
             foreach (var merger in mergers)
             {
@@ -117,7 +188,7 @@ namespace ViacQuickenConverter.Quicken
                                  Action = "Removed",
                                  Date = mergerDate,
                                  Account = account,
-                                 Security = merger.OldSecurityName,
+                                 Security = securityNameByIsin[merger.OldIsin],
                                  OptionalSymbol = merger.OldIsin,
                                  Shares = sharesToRemove,
                              };
@@ -128,7 +199,7 @@ namespace ViacQuickenConverter.Quicken
                                  Action = "Added",
                                  Date = mergerDate,
                                  Account = account,
-                                 Security = merger.NewSecurityName,
+                                 Security = securityNameByIsin[merger.NewIsin],
                                  OptionalSymbol = merger.NewIsin,
                                  Shares = sharesToAdd,
                              };
