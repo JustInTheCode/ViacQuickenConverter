@@ -110,7 +110,8 @@ namespace ViacQuickenConverter.Quicken
             {
                 var mergerDate = merger.Date.ToString(DateFormats.Standard);
                 var account = $"VIAC 3a ({merger.PortfolioNumber})";
-                var sharesToRemove = orders.Where(order => order.Isin == merger.OldIsin).Sum(order => order.Units);
+                var sharesToRemove = orders.Where(order => order.Isin == merger.OldIsin && order.Type == OrderType.Buy).Sum(order => order.Units) -
+                                     orders.Where(order => order.Isin == merger.OldIsin && order.Type == OrderType.Sell).Sum(order => order.Units);
                 yield return new QuickenCsvRow
                              {
                                  Action = "Removed",
