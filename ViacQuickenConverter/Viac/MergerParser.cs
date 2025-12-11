@@ -9,11 +9,9 @@ namespace ViacQuickenConverter.Viac
     {
         public static Merger Parse(string text, string filePath)
         {
-            string? portfolioNumber = null;
             DateTime mergerDate = default;
             decimal? oldRatioUnits = null;
             decimal? newRatioUnits = null;
-            string? oldSecurityName = null;
             string? oldIsin = null;
             string? newSecurityName = null;
             string? newIsin = null;
@@ -21,11 +19,7 @@ namespace ViacQuickenConverter.Viac
             var lines = text.Split(Environment.NewLine);
             foreach (var line in lines)
             {
-                if (line.StartsWith("Portfolio"))
-                {
-                    portfolioNumber = GetPortfolioNumber(line);
-                }
-                else if (line.Contains("Your portfolio holdings on"))
+                if (line.Contains("Your portfolio holdings on"))
                 {
                     mergerDate = GetMergerDate(line);
                 }
@@ -36,7 +30,6 @@ namespace ViacQuickenConverter.Viac
                 }
                 else if (line.StartsWith("We take from your portfolio:"))
                 {
-                    oldSecurityName = GetSecurityName(lines[lineCount + 1]);
                     oldIsin = GetIsin(lines[lineCount + 2]);
                 }
                 else if (line.StartsWith("We add to your portfolio:"))
@@ -46,16 +39,6 @@ namespace ViacQuickenConverter.Viac
                 }
 
                 lineCount++;
-            }
-
-            if (portfolioNumber == null)
-            {
-                throw new ValueNotFoundException(ErrorFieldNames.PortfolioNumber, filePath);
-            }
-
-            if (oldSecurityName is null)
-            {
-                throw new ValueNotFoundException(ErrorFieldNames.NewSecurityName, filePath);
             }
 
             if (oldIsin is null)
@@ -88,20 +71,7 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.MergerDate, filePath);
             }
 
-            return new Merger(portfolioNumber,
-                              oldSecurityName,
-                              oldIsin,
-                              newSecurityName,
-                              newIsin,
-                              newRatioUnits.Value / oldRatioUnits.Value,
-                              mergerDate);
-        }
-
-        private static string GetPortfolioNumber(string line)
-        {
-            const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            return new Merger(oldIsin, newSecurityName, newIsin, newRatioUnits.Value / oldRatioUnits.Value, mergerDate);
         }
 
         private static DateTime GetMergerDate(string line)
@@ -159,12 +129,5 @@ namespace ViacQuickenConverter.Viac
         private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
     }
 
-    public readonly record struct Merger(
-        string PortfolioNumber,
-        string OldSecurityName,
-        string OldIsin,
-        string NewSecurityName,
-        string NewIsin,
-        decimal ConversionRatio,
-        DateTime Date);
+    public readonly record struct Merger(string OldIsin, string NewSecurityName, string NewIsin, decimal ConversionRatio, DateTime Date);
 }
