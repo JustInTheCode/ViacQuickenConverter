@@ -78,16 +78,16 @@ namespace ViacQuickenConverter.Viac
         private static string GetPortfolioNumber(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
-            var paymentLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
-            var expectedPaymentWordNumber = paymentLineComponents.Length;
-            var paymentString = paymentLineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
-            var currency = paymentLineComponents[^2];
+            var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
+            var expectedPaymentWordNumber = lineComponents.Length;
+            var paymentString = lineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
+            var currency = lineComponents[^2];
 
             return decimal.TryParse(paymentString, out var payment) ? (payment, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.Payment, line, expectedPaymentWordNumber, paymentString);
@@ -95,9 +95,9 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetDepositDate(string line)
         {
-            var dateLineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 4;
-            var depositDateString = dateLineComponents[expectedWordNumber - 1];
+            var depositDateString = lineComponents[expectedWordNumber - 1];
 
             return DateTime.TryParse(depositDateString, out var depositDate) ? depositDate :
                        throw new ValueInvalidException(ErrorFieldNames.DepositDate, line, expectedWordNumber, depositDateString);

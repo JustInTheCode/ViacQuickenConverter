@@ -142,14 +142,14 @@ namespace ViacQuickenConverter.Viac
         private static string GetPortfolioNumber(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static string GetDividendType(string line)
         {
-            var dividendLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
-            var dividendType = string.Join(" ", dividendLineComponents.Skip(3));
+            var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
+            var dividendType = string.Join(" ", lineComponents.Skip(3));
             string[] supportedTypes = ["Ordinary dividend", "Refund withholding tax"];
             if (dividendType == "Ordinary dividend")
             {
@@ -166,8 +166,8 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetSecurityName(string line)
         {
-            var unitsLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
-            var name = string.Join(" ", unitsLineComponents.Skip(2));
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
+            var name = string.Join(" ", lineComponents.Skip(2));
             if (name.Length == 0)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.SecurityName, line);
@@ -182,16 +182,16 @@ namespace ViacQuickenConverter.Viac
         private static string GetIsin(string line)
         {
             const int expectedWordNumber = 2;
-            var isinLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return isinLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
-            var paymentLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
             const int expectedPaymentWordNumber = 4;
-            var paymentString = paymentLineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
-            var currency = paymentLineComponents[2];
+            var paymentString = lineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
+            var currency = lineComponents[2];
 
             return decimal.TryParse(paymentString, out var payment) ? (payment, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.Payment, line, expectedPaymentWordNumber, paymentString);
@@ -199,18 +199,18 @@ namespace ViacQuickenConverter.Viac
 
         private static decimal GetAmount(string line)
         {
-            var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 3;
-            var amountString = amountLineComponents[expectedWordNumber - 1].Replace("'", "");
+            var amountString = lineComponents[expectedWordNumber - 1].Replace("'", "");
 
             return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, expectedWordNumber, amountString);
         }
 
         private static DateTime GetDividendDate(string line)
         {
-            var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 5;
-            var dividendDateString = dateLineComponents[expectedWordNumber - 1];
+            var dividendDateString = lineComponents[expectedWordNumber - 1];
 
             return DateTime.TryParse(dividendDateString, out var dividendDate) ? dividendDate :
                        throw new ValueInvalidException(ErrorFieldNames.DividendDate, line, expectedWordNumber, dividendDateString);

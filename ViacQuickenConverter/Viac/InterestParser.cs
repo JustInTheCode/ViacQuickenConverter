@@ -83,16 +83,16 @@ namespace ViacQuickenConverter.Viac
         private static string GetPortfolioNumber(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Credit, string Currency) GetCreditAndCurrency(string line)
         {
-            var creditLineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
             const int expectedCreditWordNumber = 4;
-            var creditString = creditLineComponents[expectedCreditWordNumber - 1].Replace("'", "");
-            var currency = creditLineComponents[2];
+            var creditString = lineComponents[expectedCreditWordNumber - 1].Replace("'", "");
+            var currency = lineComponents[2];
 
             return decimal.TryParse(creditString, out var credit) ? (credit, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.InterestCredit, line, expectedCreditWordNumber, creditString);
@@ -100,9 +100,9 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetInterestDate(string line)
         {
-            var dateLineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
             const int expectedWordNumber = 2;
-            var interestDateString = dateLineComponents[expectedWordNumber - 1];
+            var interestDateString = lineComponents[expectedWordNumber - 1];
 
             return DateTime.TryParse(interestDateString, out var interestDate) ? interestDate :
                        throw new ValueInvalidException(ErrorFieldNames.InterestDate, line, expectedWordNumber, interestDateString);

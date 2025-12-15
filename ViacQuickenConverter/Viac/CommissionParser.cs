@@ -83,16 +83,16 @@ namespace ViacQuickenConverter.Viac
         private static string GetPortfolioNumber(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
         {
-            var chargedLineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
-            var expectedChargedWordNumber = chargedLineComponents.Length;
-            var chargedAmountString = chargedLineComponents[expectedChargedWordNumber - 1].Replace("'", "");
-            var currency = chargedLineComponents[^2];
+            var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
+            var expectedChargedWordNumber = lineComponents.Length;
+            var chargedAmountString = lineComponents[expectedChargedWordNumber - 1].Replace("'", "");
+            var currency = lineComponents[^2];
 
             return decimal.TryParse(chargedAmountString, out var chargedAmount) ? (chargedAmount, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.ChargedAmount, line, expectedChargedWordNumber, chargedAmountString);
@@ -100,9 +100,9 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetCommissionDate(string line)
         {
-            var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 2;
-            var commissionDateString = dateLineComponents[expectedWordNumber - 1];
+            var commissionDateString = lineComponents[expectedWordNumber - 1];
 
             return DateTime.TryParse(commissionDateString, out var commissionDate) ? commissionDate :
                        throw new ValueInvalidException(ErrorFieldNames.CommissionDate, line, expectedWordNumber, commissionDateString);

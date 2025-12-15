@@ -77,8 +77,8 @@ namespace ViacQuickenConverter.Viac
         private static DateTime GetMergerDate(string line)
         {
             const int expectedWordNumber = 5;
-            var dateLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            var mergerDateString = dateLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            var mergerDateString = lineComponents[expectedWordNumber - 1];
             mergerDateString = mergerDateString.TrimEnd(":").ToString();
 
             return DateTime.TryParse(mergerDateString, out var mergerDate) ? mergerDate :
@@ -88,8 +88,8 @@ namespace ViacQuickenConverter.Viac
         private static decimal GetOldRatioUnits(string line)
         {
             const int expectedWordNumber = 3;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
-            var ratioString = portfolioNumberLineComponents[1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
+            var ratioString = lineComponents[1];
 
             return decimal.TryParse(ratioString, out var ratio) ? ratio : throw new ValueInvalidException(ErrorFieldNames.OldRatioUnits, line, expectedWordNumber, ratioString);
         }
@@ -97,16 +97,16 @@ namespace ViacQuickenConverter.Viac
         private static decimal GetNewRatioUnits(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
-            var ratioString = portfolioNumberLineComponents[0];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Minimum);
+            var ratioString = lineComponents[0];
 
             return decimal.TryParse(ratioString, out var ratio) ? ratio : throw new ValueInvalidException(ErrorFieldNames.OldRatioUnits, line, expectedWordNumber, ratioString);
         }
 
         private static string GetSecurityName(string line)
         {
-            var unitsLineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum);
-            var name = string.Join(" ", unitsLineComponents.Skip(1));
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum);
+            var name = string.Join(" ", lineComponents.Skip(1));
             if (name.Length == 0)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.SecurityName, line);
@@ -121,8 +121,8 @@ namespace ViacQuickenConverter.Viac
         private static string GetIsin(string line)
         {
             const int expectedWordNumber = 2;
-            var isinLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return isinLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         [System.Text.RegularExpressions.GeneratedRegex(@"\s+")]

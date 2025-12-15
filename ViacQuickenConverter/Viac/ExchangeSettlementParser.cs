@@ -143,15 +143,15 @@ namespace ViacQuickenConverter.Viac
         private static string GetPortfolioNumber(string line)
         {
             const int expectedWordNumber = 2;
-            var portfolioNumberLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return portfolioNumberLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static OrderType GetOrderType(string line)
         {
-            var orderLineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 2;
-            var orderTypeString = orderLineComponents[expectedWordNumber - 1];
+            var orderTypeString = lineComponents[expectedWordNumber - 1];
 
             return Enum.TryParse(orderTypeString, out OrderType orderType) ? orderType :
                        throw new ValueInvalidException(ErrorFieldNames.OrderType, line, expectedWordNumber, orderTypeString);
@@ -159,8 +159,8 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetSecurityName(string line)
         {
-            var unitsLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
-            var name = string.Join(" ", unitsLineComponents.Skip(2));
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
+            var name = string.Join(" ", lineComponents.Skip(2));
             if (name.Length == 0)
             {
                 throw new ValueNotFoundException(ErrorFieldNames.SecurityName, line);
@@ -175,16 +175,16 @@ namespace ViacQuickenConverter.Viac
         private static string GetIsin(string line)
         {
             const int expectedWordNumber = 2;
-            var isinLineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return isinLineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
+            return lineComponents[expectedWordNumber - 1];
         }
 
         private static (decimal Price, string Currency) GetPriceAndCurrency(string line)
         {
-            var priceLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             const int expectedPriceWordNumber = 3;
-            var priceString = priceLineComponents[expectedPriceWordNumber - 1].Replace("'", "");
-            var currency = priceLineComponents[1];
+            var priceString = lineComponents[expectedPriceWordNumber - 1].Replace("'", "");
+            var currency = lineComponents[1];
 
             return decimal.TryParse(priceString, out var price) ? (price, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.Price, line, expectedPriceWordNumber, priceString);
@@ -192,18 +192,18 @@ namespace ViacQuickenConverter.Viac
 
         private static decimal GetAmount(string line)
         {
-            var amountLineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 3;
-            var amountString = amountLineComponents[expectedWordNumber - 1].Replace("'", "");
+            var amountString = lineComponents[expectedWordNumber - 1].Replace("'", "");
 
             return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, expectedWordNumber, amountString);
         }
 
         private static DateTime GetOrderDate(string line)
         {
-            var dateLineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
             const int expectedWordNumber = 5;
-            var orderDateString = dateLineComponents[expectedWordNumber - 1];
+            var orderDateString = lineComponents[expectedWordNumber - 1];
 
             return DateTime.TryParse(orderDateString, out var orderDate) ? orderDate :
                        throw new ValueInvalidException(ErrorFieldNames.OrderDate, line, expectedWordNumber, orderDateString);
