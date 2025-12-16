@@ -71,7 +71,13 @@ namespace ViacQuickenConverter.Viac
                 throw new ValueNotFoundException(ErrorFieldNames.MergerDate, filePath);
             }
 
-            return new Merger(oldIsin, newSecurityName, newIsin, newRatioUnits.Value / oldRatioUnits.Value, mergerDate);
+            var conversionRatio = newRatioUnits.Value / oldRatioUnits.Value;
+            if (conversionRatio != 1)
+            {
+                throw new UnsupportedConversionRatioException(conversionRatio, filePath);
+            }
+
+            return new Merger(oldIsin, newSecurityName, newIsin, mergerDate);
         }
 
         private static DateTime GetMergerDate(string line)
@@ -127,13 +133,20 @@ namespace ViacQuickenConverter.Viac
         private static partial System.Text.RegularExpressions.Regex MultipleWhitespaceRegex();
     }
 
+    public class UnsupportedConversionRatioException : Exception
+    {
+        public UnsupportedConversionRatioException(decimal actualRatio, string filePath) :
+            base($"The conversion ratio {actualRatio} of the merger in file '{filePath}' is not supported. Only a ratio of 1 is supported. See documentation for details.")
+        {
+        }
+    }
+
     /// <summary>
     ///     Represents a security merger transaction from a VIAC statement.
     /// </summary>
     /// <param name="OldIsin">The ISIN of the security that was removed from the portfolio.</param>
     /// <param name="NewSecurityName">The name of the security that was added to the portfolio.</param>
     /// <param name="NewIsin">The ISIN of the security that was added to the portfolio.</param>
-    /// <param name="ConversionRatio">The ratio used to convert old units to new units (new ratio ÷ old ratio).</param>
     /// <param name="Date">The date the merger was executed.</param>
-    public readonly record struct Merger(string OldIsin, string NewSecurityName, string NewIsin, decimal ConversionRatio, DateTime Date);
+    public readonly record struct Merger(string OldIsin, string NewSecurityName, string NewIsin, DateTime Date);
 }
