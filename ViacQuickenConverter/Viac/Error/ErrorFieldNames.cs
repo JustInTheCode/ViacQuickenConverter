@@ -10,8 +10,6 @@
 
         public const string OldSecurityName = "old security name";
 
-        public const string NewSecurityName = "new security name";
-
         public const string Isin = "ISIN";
 
         public const string OldIsin = "old ISIN";
