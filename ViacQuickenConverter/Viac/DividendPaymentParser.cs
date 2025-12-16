@@ -150,18 +150,12 @@ namespace ViacQuickenConverter.Viac
         {
             var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
             var dividendType = string.Join(" ", lineComponents.Skip(3));
-            string[] supportedTypes = ["Ordinary dividend", "Refund withholding tax"];
-            if (dividendType == "Ordinary dividend")
+            return dividendType switch
             {
-                return "Ordinary";
-            }
-
-            if (dividendType == "Refund withholding tax")
-            {
-                return "Tax Refund";
-            }
-
-            throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, supportedTypes);
+                "Ordinary dividend" => "Ordinary",
+                "Refund withholding tax" => "Tax Refund",
+                _ => throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, ["Ordinary dividend", "Refund withholding tax"]),
+            };
         }
 
         private static string GetSecurityName(string line)
@@ -247,4 +241,12 @@ namespace ViacQuickenConverter.Viac
         decimal Amount,
         DateTime Date,
         string Remark);
+
+    public class UnsupportedValueException : Exception
+    {
+        public UnsupportedValueException(string valueName, string line, string actualValue, string[] supportedValues) :
+            base($"Unsupported {valueName} in line: '{line}'. Found: '{actualValue}'. Supported values: {string.Join(", ", supportedValues.Select(supportedValue => $"'{supportedValue}'"))}.")
+        {
+        }
+    }
 }
