@@ -32,8 +32,8 @@ namespace ViacQuickenConverter
             try
             {
                 var directoryPath = GetDirectoryPath();
-                var files = Directory.GetFiles(directoryPath, "*.pdf");
-                if (files.Length == 0)
+                var filePaths = Directory.GetFiles(directoryPath, "*.pdf");
+                if (filePaths.Length == 0)
                 {
                     Console.WriteLine("Directory contains no files. Nothing to do.");
                     return;
@@ -51,43 +51,43 @@ namespace ViacQuickenConverter
                 List<Interest> interests = [];
                 List<Order> orders = [];
                 List<Merger> mergers = [];
-                foreach (var file in files)
+                foreach (var filePath in filePaths)
                 {
-                    using var pdf = PdfDocument.Open(file);
+                    using var pdf = PdfDocument.Open(filePath);
                     var pages = pdf.GetPages().ToArray();
                     if (pages.Length != 1)
                     {
-                        throw new InvalidPageCountException(file, pages.Length);
+                        throw new InvalidPageCountException(filePath, pages.Length);
                     }
 
                     var text = ContentOrderTextExtractor.GetText(pages[0]);
                     if (text.Contains(Merger))
                     {
-                        mergers.Add(ParseWithLogging(Merger, file, () => MergerParser.Parse(text, file)));
+                        mergers.Add(ParseWithLogging(Merger, filePath, () => MergerParser.Parse(text, filePath)));
                     }
                     else if (text.Contains(ExchangeSettlement))
                     {
-                        orders.Add(await ParseWithLoggingAsync(ExchangeSettlement, file, () => exchangeSettlementParser.ParseAsync(text, file)));
+                        orders.Add(await ParseWithLoggingAsync(ExchangeSettlement, filePath, () => exchangeSettlementParser.ParseAsync(text, filePath)));
                     }
                     else if (text.Contains(DividendPayment) || text.Contains(TaxRefund))
                     {
-                        dividends.Add(await ParseWithLoggingAsync(DividendPayment, file, () => dividendPaymentParser.ParseAsync(text, file)));
+                        dividends.Add(await ParseWithLoggingAsync(DividendPayment, filePath, () => dividendPaymentParser.ParseAsync(text, filePath)));
                     }
                     else if (text.Contains(Deposit))
                     {
-                        deposits.Add(await ParseWithLoggingAsync(Deposit, file, () => depositParser.ParseAsync(text, file)));
+                        deposits.Add(await ParseWithLoggingAsync(Deposit, filePath, () => depositParser.ParseAsync(text, filePath)));
                     }
                     else if (text.Contains(Interest))
                     {
-                        interests.Add(await ParseWithLoggingAsync(Interest, file, () => interestParser.ParseAsync(text, file)));
+                        interests.Add(await ParseWithLoggingAsync(Interest, filePath, () => interestParser.ParseAsync(text, filePath)));
                     }
                     else if (text.Contains(Commission))
                     {
-                        commissions.Add(await ParseWithLoggingAsync(Commission, file, () => commissionParser.ParseAsync(text, file)));
+                        commissions.Add(await ParseWithLoggingAsync(Commission, filePath, () => commissionParser.ParseAsync(text, filePath)));
                     }
                     else
                     {
-                        Console.WriteLine($"Skipping file '{file}' — unrecognized statement type.");
+                        Console.WriteLine($"Skipping file '{filePath}' — unrecognized statement type.");
                     }
                 }
 
@@ -147,20 +147,20 @@ namespace ViacQuickenConverter
             }
         }
 
-        private static async Task<T> ParseWithLoggingAsync<T>(string type, string file, Func<Task<T>> parseFunc)
+        private static async Task<T> ParseWithLoggingAsync<T>(string type, string filePath, Func<Task<T>> parseFunc)
         {
-            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{file}'.");
+            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{filePath}'.");
             var result = await parseFunc();
-            Console.WriteLine($"Parsed {type}, file: '{file}'.");
+            Console.WriteLine($"Parsed {type}, file: '{filePath}'.");
 
             return result;
         }
 
-        private static T ParseWithLogging<T>(string type, string file, Func<T> parseFunc)
+        private static T ParseWithLogging<T>(string type, string filePath, Func<T> parseFunc)
         {
-            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{file}'.");
+            Console.WriteLine($"{Environment.NewLine}Parsing {type}, file: '{filePath}'.");
             var result = parseFunc();
-            Console.WriteLine($"Parsed {type}, file: '{file}'.");
+            Console.WriteLine($"Parsed {type}, file: '{filePath}'.");
 
             return result;
         }
