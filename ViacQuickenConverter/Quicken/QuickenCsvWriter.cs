@@ -4,13 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper;
-using ViacQuickenConverter.Formatting;
 using ViacQuickenConverter.Viac;
 
 namespace ViacQuickenConverter.Quicken
 {
     public static class QuickenCsvWriter
     {
+        private const string DateFormat = "yyyy-MM-dd";
+
         public static void Write(List<Order> orders,
                                  List<Dividend> dividends,
                                  List<Deposit> deposits,
@@ -20,7 +21,7 @@ namespace ViacQuickenConverter.Quicken
         {
             var oldToNewIsinMap = CreateOldToNewIsinMap(mergers);
             var newestSecurityNameByIsin = CreateNewestSecurityNameMap(orders, dividends, mergers);
-            var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormats.Standard)}", ".csv");
+            var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormat)}", ".csv");
             using var writer = new StreamWriter(filePath);
             using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
             var rows = new List<QuickenCsvRow>();
@@ -130,7 +131,7 @@ namespace ViacQuickenConverter.Quicken
                 yield return new QuickenCsvRow
                              {
                                  Action = order.Type == OrderType.Buy ? "Bought" : "Sold",
-                                 Date = order.Date.ToString(DateFormats.Standard),
+                                 Date = order.Date.ToString(DateFormat),
                                  Account = $"VIAC 3a ({order.PortfolioNumber})",
                                  Security = newestSecurityNameByIsin[isin],
                                  OptionalSymbol = isin,
@@ -161,7 +162,7 @@ namespace ViacQuickenConverter.Quicken
                 yield return new QuickenCsvRow
                              {
                                  Action = "Div",
-                                 Date = dividend.Date.ToString(DateFormats.Standard),
+                                 Date = dividend.Date.ToString(DateFormat),
                                  Account = $"VIAC 3a ({dividend.PortfolioNumber})",
                                  Security = newestSecurityNameByIsin[isin],
                                  OptionalSymbol = isin,
@@ -178,7 +179,7 @@ namespace ViacQuickenConverter.Quicken
             return deposits.Select(deposit => new QuickenCsvRow
                                               {
                                                   Action = "Cash",
-                                                  Date = deposit.Date.ToString(DateFormats.Standard),
+                                                  Date = deposit.Date.ToString(DateFormat),
                                                   Account = $"VIAC 3a ({deposit.PortfolioNumber})",
                                                   Amount = deposit.Payment,
                                                   Memo = deposit.Remark,
@@ -190,7 +191,7 @@ namespace ViacQuickenConverter.Quicken
             return interests.Select(interest => new QuickenCsvRow
                                                 {
                                                     Action = "IntInc",
-                                                    Date = interest.Date.ToString(DateFormats.Standard),
+                                                    Date = interest.Date.ToString(DateFormat),
                                                     Account = $"VIAC 3a ({interest.PortfolioNumber})",
                                                     Security = "Cash", // Quicken does not allow IntInc without a security name
                                                     Amount = interest.Credit,
@@ -203,7 +204,7 @@ namespace ViacQuickenConverter.Quicken
             return commissions.Select(commission => new QuickenCsvRow
                                                     {
                                                         Action = "MiscExp",
-                                                        Date = commission.Date.ToString(DateFormats.Standard),
+                                                        Date = commission.Date.ToString(DateFormat),
                                                         Account = $"VIAC 3a ({commission.PortfolioNumber})",
                                                         Amount = commission.ChargedAmount,
                                                         Memo = commission.Remark,
