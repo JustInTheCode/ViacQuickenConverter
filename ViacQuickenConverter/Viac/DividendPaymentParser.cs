@@ -181,29 +181,26 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetIsin(string line)
         {
-            const int expectedWordNumber = 2;
-            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return lineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            return lineComponents[^1];
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
             var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact);
-            const int expectedPaymentWordNumber = 4;
-            var paymentString = lineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
+            var paymentString = lineComponents[^1].Replace("'", "");
             var currency = lineComponents[2];
 
             return decimal.TryParse(paymentString, out var payment) ? (payment, currency) :
-                       throw new ValueInvalidException(ErrorFieldNames.Payment, line, expectedPaymentWordNumber, paymentString);
+                       throw new ValueInvalidException(ErrorFieldNames.Payment, line, lineComponents.Length, paymentString);
         }
 
         private static decimal GetAmount(string line)
         {
             var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
-            const int expectedWordNumber = 3;
-            var amountString = lineComponents[expectedWordNumber - 1].Replace("'", "");
+            var amountString = lineComponents[^1].Replace("'", "");
 
-            return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, expectedWordNumber, amountString);
+            return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, lineComponents.Length, amountString);
         }
 
         private static DateTime GetDividendDate(string line)

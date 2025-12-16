@@ -82,20 +82,18 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetPortfolioNumber(string line)
         {
-            const int expectedWordNumber = 2;
-            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return lineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            return lineComponents[^1];
         }
 
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
         {
             var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
-            var expectedChargedWordNumber = lineComponents.Length;
-            var chargedAmountString = lineComponents[expectedChargedWordNumber - 1].Replace("'", "");
+            var chargedAmountString = lineComponents[^1].Replace("'", "");
             var currency = lineComponents[^2];
 
             return decimal.TryParse(chargedAmountString, out var chargedAmount) ? (chargedAmount, currency) :
-                       throw new ValueInvalidException(ErrorFieldNames.ChargedAmount, line, expectedChargedWordNumber, chargedAmountString);
+                       throw new ValueInvalidException(ErrorFieldNames.ChargedAmount, line, lineComponents.Length, chargedAmountString);
         }
 
         private static DateTime GetCommissionDate(string line)

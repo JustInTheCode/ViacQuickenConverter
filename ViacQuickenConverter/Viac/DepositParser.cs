@@ -77,20 +77,18 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetPortfolioNumber(string line)
         {
-            const int expectedWordNumber = 2;
-            var lineComponents = LineParser.SplitLine(line, expectedWordNumber, LineParser.WordCountRequirement.Exact);
-            return lineComponents[expectedWordNumber - 1];
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            return lineComponents[^1];
         }
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
             var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Minimum);
-            var expectedPaymentWordNumber = lineComponents.Length;
-            var paymentString = lineComponents[expectedPaymentWordNumber - 1].Replace("'", "");
+            var paymentString = lineComponents[^1].Replace("'", "");
             var currency = lineComponents[^2];
 
             return decimal.TryParse(paymentString, out var payment) ? (payment, currency) :
-                       throw new ValueInvalidException(ErrorFieldNames.Payment, line, expectedPaymentWordNumber, paymentString);
+                       throw new ValueInvalidException(ErrorFieldNames.Payment, line, lineComponents.Length, paymentString);
         }
 
         private static DateTime GetDepositDate(string line)
