@@ -103,11 +103,7 @@ namespace ViacQuickenConverter
 
                 if (mergers.Count > 0)
                 {
-                    Console.WriteLine($"""
-                                       {Environment.NewLine}Merger detected.
-                                       Share quantities for fund fusions are computed based on all exchange settlements.
-                                       If any relevant statements are missing, the merger result will be incorrect.
-                                       """);
+                    PromptMergerAcknowledgment();
                 }
 
                 Console.WriteLine($"{Environment.NewLine}Generating Quicken CSV file...");
@@ -163,6 +159,38 @@ namespace ViacQuickenConverter
             Console.WriteLine($"Parsed {type}, file: '{filePath}'.");
 
             return result;
+        }
+
+        private static void PromptMergerAcknowledgment()
+        {
+            Console.WriteLine($"""
+                               {Environment.NewLine}WARNING: Merger detected!
+                               Mergers require special handling to maintain correct tax lots in Quicken.
+                               You must either reimport ALL statements since account inception OR handle the merger manually.
+                               See documentation for detailed instructions.
+                               """);
+
+            while (true)
+            {
+                Console.WriteLine($"{Environment.NewLine}Do you acknowledge this and wish to continue? (y/n): ");
+                var response = Console.ReadLine()?.Trim().ToLowerInvariant();
+                switch (response)
+                {
+                    case "y":
+                        return;
+
+                    case "n":
+                        Console.WriteLine($"{Environment.NewLine}Operation cancelled. No file was generated.");
+                        Console.WriteLine("Press any key to exit.");
+                        Console.ReadKey(true);
+                        Environment.Exit(0);
+                        return;
+
+                    default:
+                        Console.WriteLine("Incorrect input. Please enter 'y' or 'n'.");
+                        break;
+                }
+            }
         }
 
         private class InvalidPageCountException : Exception
