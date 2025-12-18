@@ -13,6 +13,7 @@ namespace ViacQuickenConverter.Quicken
         private const string DateFormat = "yyyy-MM-dd";
 
         public static void Write(List<Order> orders,
+                                 List<DividendCancellation> dividendCancellations,
                                  List<Dividend> dividends,
                                  List<Deposit> deposits,
                                  List<Interest> interests,
@@ -20,12 +21,13 @@ namespace ViacQuickenConverter.Quicken
                                  List<Merger> mergers)
         {
             var oldToNewIsinMap = CreateOldToNewIsinMap(mergers);
-            var newestSecurityNameByIsin = CreateNewestSecurityNameMap(orders, dividends, mergers);
+            var newestSecurityNameByIsin = CreateNewestSecurityNameMap(orders, dividendCancellations, dividends, mergers);
             var filePath = GetUniqueFilePath(AppContext.BaseDirectory, $"viac_quicken_{DateTime.Now.ToString(DateFormat)}", ".csv");
             using var writer = new StreamWriter(filePath);
             using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
             var rows = new List<QuickenCsvRow>();
             rows.AddRange(ConvertOrders(orders, newestSecurityNameByIsin, oldToNewIsinMap));
+            rows.AddRange(ConvertDividendCancellations(dividendCancellations, newestSecurityNameByIsin, oldToNewIsinMap));
             rows.AddRange(ConvertDividends(dividends, newestSecurityNameByIsin, oldToNewIsinMap));
             rows.AddRange(ConvertDeposits(deposits));
             rows.AddRange(ConvertInterests(interests));
@@ -63,12 +65,20 @@ namespace ViacQuickenConverter.Quicken
             }
         }
 
-        private static Dictionary<string, string> CreateNewestSecurityNameMap(List<Order> orders, List<Dividend> dividends, List<Merger> mergers)
+        private static Dictionary<string, string> CreateNewestSecurityNameMap(List<Order> orders,
+                                                                              List<DividendCancellation> dividendCancellations,
+                                                                              List<Dividend> dividends,
+                                                                              List<Merger> mergers)
         {
             var newestNameByIsin = new Dictionary<string, (string SecurityName, DateTime Date)>();
             foreach (var order in orders)
             {
                 UpdateToNewestSecurityName(newestNameByIsin, order.Isin, order.SecurityName, order.Date);
+            }
+
+            foreach (var dividendCancellation in dividendCancellations)
+            {
+                UpdateToNewestSecurityName(newestNameByIsin, dividendCancellation.Isin, dividendCancellation.SecurityName, dividendCancellation.Date);
             }
 
             foreach (var dividend in dividends)
@@ -139,6 +149,35 @@ namespace ViacQuickenConverter.Quicken
                                  Price = order.Price,
                                  Amount = order.Amount,
                                  Memo = order.Remark,
+                             };
+            }
+        }
+
+        private static IEnumerable<QuickenCsvRow> ConvertDividendCancellations(List<DividendCancellation> dividendCancellations,
+                                                                               Dictionary<string, string> newestSecurityNameByIsin,
+                                                                               Dictionary<string, string>? oldToNewIsinMap)
+        {
+            foreach (var dividendCancellation in dividendCancellations)
+            {
+                string isin;
+                if (oldToNewIsinMap != null && oldToNewIsinMap.TryGetValue(dividendCancellation.Isin, out var newIsin))
+                {
+                    isin = newIsin;
+                }
+                else
+                {
+                    isin = dividendCancellation.Isin;
+                }
+
+                yield return new QuickenCsvRow
+                             {
+                                 Action = "Div",
+                                 Date = dividendCancellation.Date.ToString(DateFormat),
+                                 Account = $"VIAC 3a ({dividendCancellation.PortfolioNumber})",
+                                 Security = newestSecurityNameByIsin[isin],
+                                 OptionalSymbol = isin,
+                                 Amount = dividendCancellation.Amount,
+                                 Memo = dividendCancellation.Remark,
                              };
             }
         }

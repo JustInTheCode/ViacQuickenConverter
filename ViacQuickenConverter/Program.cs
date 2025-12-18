@@ -17,6 +17,8 @@ namespace ViacQuickenConverter
 
         private const string DividendPayment = "Dividend Payment";
 
+        private const string DividendPaymentCancellation = "Cancelation Dividend Payment";
+
         private const string TaxRefund = "Refund withholding tax";
 
         private const string Deposit = "Deposit 3a";
@@ -41,12 +43,14 @@ namespace ViacQuickenConverter
 
                 using var exchangeRateClient = new ExchangeRateClient();
                 var exchangeSettlementParser = new ExchangeSettlementParser(exchangeRateClient);
+                var dividendCancellationParser = new DividendCancellationParser(exchangeRateClient);
                 var dividendPaymentParser = new DividendPaymentParser(exchangeRateClient);
                 var depositParser = new DepositParser(exchangeRateClient);
                 var interestParser = new InterestParser(exchangeRateClient);
                 var commissionParser = new CommissionParser(exchangeRateClient);
                 List<Commission> commissions = [];
                 List<Deposit> deposits = [];
+                List<DividendCancellation> dividendCancellations = [];
                 List<Dividend> dividends = [];
                 List<Interest> interests = [];
                 List<Order> orders = [];
@@ -68,6 +72,10 @@ namespace ViacQuickenConverter
                     else if (text.Contains(ExchangeSettlement))
                     {
                         orders.Add(await ParseWithLoggingAsync(ExchangeSettlement, filePath, () => exchangeSettlementParser.ParseAsync(text, filePath)));
+                    }
+                    else if (text.Contains(DividendPaymentCancellation))
+                    {
+                        dividendCancellations.Add(await ParseWithLoggingAsync(DividendPaymentCancellation, filePath, () => dividendCancellationParser.ParseAsync(text, filePath)));
                     }
                     else if (text.Contains(DividendPayment) || text.Contains(TaxRefund))
                     {
@@ -91,15 +99,17 @@ namespace ViacQuickenConverter
                     }
                 }
 
-                const int labelWidth = 22;
+                const int labelWidth = 31;
+                var totalCount = orders.Count + dividendCancellations.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count;
                 Console.WriteLine($"{Environment.NewLine}Parsed Viac Statements:");
                 Console.WriteLine($"  {"Exchange Settlements:",-labelWidth} {orders.Count}");
+                Console.WriteLine($"  {"Cancellation Dividend Payments:",-labelWidth} {dividendCancellations.Count}");
                 Console.WriteLine($"  {"Dividend Payments:",-labelWidth} {dividends.Count}");
                 Console.WriteLine($"  {"Deposits:",-labelWidth} {deposits.Count}");
                 Console.WriteLine($"  {"Interests:",-labelWidth} {interests.Count}");
                 Console.WriteLine($"  {"Commissions:",-labelWidth} {commissions.Count}");
                 Console.WriteLine($"  {"Mergers:",-labelWidth} {mergers.Count}");
-                Console.WriteLine($"  {"Total",-labelWidth} {orders.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count}");
+                Console.WriteLine($"  {"Total",-labelWidth} {totalCount}");
 
                 if (mergers.Count > 0)
                 {
@@ -108,6 +118,7 @@ namespace ViacQuickenConverter
 
                 Console.WriteLine($"{Environment.NewLine}Generating Quicken CSV file...");
                 QuickenCsvWriter.Write(orders,
+                                       dividendCancellations,
                                        dividends,
                                        deposits,
                                        interests,
