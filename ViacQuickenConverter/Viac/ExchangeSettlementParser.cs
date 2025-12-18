@@ -142,13 +142,13 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetPortfolioNumber(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact, ErrorFieldNames.PortfolioNumber);
             return lineComponents[^1];
         }
 
         private static OrderType GetOrderType(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact, ErrorFieldNames.OrderType);
             var orderTypeString = lineComponents[^1];
 
             return Enum.TryParse(orderTypeString, out OrderType orderType) ? orderType :
@@ -157,7 +157,7 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetSecurityName(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.SecurityName);
             var name = string.Join(" ", lineComponents.Skip(2));
             if (name.Length == 0)
             {
@@ -172,15 +172,15 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetIsin(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact, ErrorFieldNames.Isin);
             return lineComponents[^1];
         }
 
         private static (decimal Price, string Currency) GetPriceAndCurrency(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact, ErrorFieldNames.PriceAndCurrency);
             var priceString = lineComponents[^1].Replace("'", "");
-            var currency = lineComponents[1];
+            var currency = lineComponents[^2];
 
             return decimal.TryParse(priceString, out var price) ? (price, currency) :
                        throw new ValueInvalidException(ErrorFieldNames.Price, line, lineComponents.Length, priceString);
@@ -188,7 +188,7 @@ namespace ViacQuickenConverter.Viac
 
         private static decimal GetAmount(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Exact, ErrorFieldNames.Amount);
             var amountString = lineComponents[^1].Replace("'", "");
 
             return decimal.TryParse(amountString, out var amount) ? amount : throw new ValueInvalidException(ErrorFieldNames.Amount, line, lineComponents.Length, amountString);
@@ -196,7 +196,7 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetOrderDate(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact, ErrorFieldNames.OrderDate);
             const int expectedWordNumber = 5;
             var orderDateString = lineComponents[expectedWordNumber - 1];
 

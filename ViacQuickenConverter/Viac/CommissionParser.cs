@@ -82,13 +82,13 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetPortfolioNumber(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact, ErrorFieldNames.PortfolioNumber);
             return lineComponents[^1];
         }
 
         private static (decimal ChargedAmount, string Currency) GetChargedAndCurrency(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 6, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.ChargedAmountAndCurrency);
             var chargedAmountString = lineComponents[^1].Replace("'", "");
             var currency = lineComponents[^2];
 
@@ -98,7 +98,7 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetCommissionDate(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 7, LineParser.WordCountRequirement.Exact, ErrorFieldNames.CommissionDate);
             const int expectedWordNumber = 2;
             var commissionDateString = lineComponents[expectedWordNumber - 1];
 

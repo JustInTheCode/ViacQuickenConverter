@@ -82,7 +82,7 @@ namespace ViacQuickenConverter.Viac
 
         private static DateTime GetMergerDate(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 5, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 5, LineParser.WordCountRequirement.Exact, ErrorFieldNames.MergerDate);
             var mergerDateString = lineComponents[^1];
             mergerDateString = mergerDateString.TrimEnd(":").ToString();
 
@@ -92,7 +92,7 @@ namespace ViacQuickenConverter.Viac
 
         private static decimal GetOldRatioUnits(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.OldRatioUnits);
             const int expectedWordNumber = 2;
             var ratioString = lineComponents[expectedWordNumber - 1];
 
@@ -101,7 +101,7 @@ namespace ViacQuickenConverter.Viac
 
         private static decimal GetNewRatioUnits(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.NewRatioUnits);
             const int expectedWordNumber = 1;
             var ratioString = lineComponents[expectedWordNumber - 1];
 
@@ -110,7 +110,7 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetSecurityName(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.SecurityName);
             var name = string.Join(" ", lineComponents.Skip(1));
             if (name.Length == 0)
             {
@@ -125,7 +125,7 @@ namespace ViacQuickenConverter.Viac
 
         private static string GetIsin(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact);
+            var lineComponents = LineParser.SplitLine(line, 2, LineParser.WordCountRequirement.Exact, ErrorFieldNames.Isin);
             return lineComponents[^1];
         }
 

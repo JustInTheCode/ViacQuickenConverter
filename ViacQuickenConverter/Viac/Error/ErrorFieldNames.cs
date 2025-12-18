@@ -45,5 +45,15 @@
         public const string InterestCredit = "interest credit";
 
         public const string ChargedAmount = "charged amount";
+
+        public const string PaymentAndCurrency = "payment and currency";
+
+        public const string PriceAndCurrency = "price and currency";
+
+        public const string CreditAndCurrency = "credit and currency";
+
+        public const string AmountAndCurrency = "amount and currency";
+
+        public const string ChargedAmountAndCurrency = "charged amount and currency";
     }
 }
