@@ -15,9 +15,9 @@ namespace ViacQuickenConverter
     {
         private const string ExchangeSettlement = "Exchange Settlement";
 
-        private const string DividendPayment = "Dividend Payment";
-
         private const string DividendPaymentCancellation = "Cancelation Dividend Payment";
+
+        private const string DividendPayment = "Dividend Payment";
 
         private const string TaxRefund = "Refund withholding tax";
 
@@ -99,16 +99,16 @@ namespace ViacQuickenConverter
                     }
                 }
 
-                const int labelWidth = 31;
+                const int labelWidth = 34;
                 var totalCount = orders.Count + dividendCancellations.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count;
                 Console.WriteLine($"{Environment.NewLine}Parsed Viac Statements:");
-                Console.WriteLine($"  {"Exchange Settlements:",-labelWidth} {orders.Count}");
-                Console.WriteLine($"  {"Cancellation Dividend Payments:",-labelWidth} {dividendCancellations.Count}");
-                Console.WriteLine($"  {"Dividend Payments:",-labelWidth} {dividends.Count}");
-                Console.WriteLine($"  {"Deposits:",-labelWidth} {deposits.Count}");
-                Console.WriteLine($"  {"Interests:",-labelWidth} {interests.Count}");
-                Console.WriteLine($"  {"Commissions:",-labelWidth} {commissions.Count}");
-                Console.WriteLine($"  {"Mergers:",-labelWidth} {mergers.Count}");
+                Console.WriteLine($"  {$"{ExchangeSettlement}s:",-labelWidth} {orders.Count}");
+                Console.WriteLine($"  {$"{DividendPaymentCancellation}s:",-labelWidth} {dividendCancellations.Count}");
+                Console.WriteLine($"  {$"{DividendPayment}s:",-labelWidth} {dividends.Count}");
+                Console.WriteLine($"  {$"{Deposit}s:",-labelWidth} {deposits.Count}");
+                Console.WriteLine($"  {$"{Interest}s:",-labelWidth} {interests.Count}");
+                Console.WriteLine($"  {$"{Commission}s:",-labelWidth} {commissions.Count}");
+                Console.WriteLine($"  {$"{Merger}s:",-labelWidth} {mergers.Count}");
                 Console.WriteLine($"  {"Total",-labelWidth} {totalCount}");
 
                 if (mergers.Count > 0)
