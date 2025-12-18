@@ -48,13 +48,13 @@ namespace ViacQuickenConverter
                 var depositParser = new DepositParser(exchangeRateClient);
                 var interestParser = new InterestParser(exchangeRateClient);
                 var commissionParser = new CommissionParser(exchangeRateClient);
-                List<Commission> commissions = [];
-                List<Deposit> deposits = [];
+                List<Merger> mergers = [];
+                List<Order> orders = [];
                 List<DividendCancellation> dividendCancellations = [];
                 List<Dividend> dividends = [];
+                List<Deposit> deposits = [];
                 List<Interest> interests = [];
-                List<Order> orders = [];
-                List<Merger> mergers = [];
+                List<Commission> commissions = [];
                 foreach (var filePath in filePaths)
                 {
                     using var pdf = PdfDocument.Open(filePath);
