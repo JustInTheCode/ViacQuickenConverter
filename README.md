@@ -69,6 +69,7 @@ No installation required — just unzip and run.
   - Exchange Settlements (buys and sells)
   - Dividend Payments and Dividend Cancellations
   - Deposits
+  - Reimbursements
   - Interest Payments
   - Commissions (fees)
   - Security Mergers (fund fusions)
@@ -322,10 +323,11 @@ If you encounter an error:
      Cancelation Dividend Payments:      5
      Dividend Payments:                  87
      Deposits:                           60
+     Reimbursements:                     1
      Interests:                          48
      Commissions:                        24
      Exchange Settlement Fund Fusions:   2
-     Total:                              349
+     Total:                              350
    ```
 6. **Check for warnings** (e.g., merger detected).
 7. **Import the CSV** into Quicken.

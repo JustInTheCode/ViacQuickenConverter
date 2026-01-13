@@ -11,7 +11,7 @@
         <TrimMode>full</TrimMode>
         <IsPublishable>true</IsPublishable>
         <IsPackable>false</IsPackable>
-        <Version>1.0.0</Version>
+        <Version>1.1.0</Version>
     </PropertyGroup>
 
     <ItemGroup>
