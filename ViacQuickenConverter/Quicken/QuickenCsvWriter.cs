@@ -260,7 +260,7 @@ namespace ViacQuickenConverter.Quicken
                                                               Action = "Cash",
                                                               Date = reimbursement.Date.ToString(DateFormat),
                                                               Account = $"VIAC 3a ({reimbursement.PortfolioNumber})",
-                                                              Amount = reimbursement.Value,
+                                                              Amount = reimbursement.Amount,
                                                               Memo = reimbursement.Remark,
                                                           });
         }
