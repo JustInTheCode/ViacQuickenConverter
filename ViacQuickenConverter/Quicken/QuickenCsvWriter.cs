@@ -18,7 +18,8 @@ namespace ViacQuickenConverter.Quicken
                                  List<Deposit> deposits,
                                  List<Interest> interests,
                                  List<Commission> commissions,
-                                 List<Merger> mergers)
+                                 List<Merger> mergers,
+                                 List<Reimbursement> reimbursements)
         {
             var oldToNewIsinMap = CreateOldToNewIsinMap(mergers);
             var newestSecurityNameByIsin = CreateNewestSecurityNameMap(orders, dividendCancellations, dividends, mergers);
@@ -32,6 +33,7 @@ namespace ViacQuickenConverter.Quicken
             rows.AddRange(ConvertDeposits(deposits));
             rows.AddRange(ConvertInterests(interests));
             rows.AddRange(ConvertCommissions(commissions));
+            rows.AddRange(ConvertReimbursements(reimbursements));
             csv.WriteRecords(rows);
 
             Console.WriteLine($"Rows written: {rows.Count}");
@@ -249,6 +251,18 @@ namespace ViacQuickenConverter.Quicken
                                                         Memo = commission.Remark,
                                                         Category = "Financial:Financial Advisor",
                                                     });
+        }
+
+        private static IEnumerable<QuickenCsvRow> ConvertReimbursements(List<Reimbursement> reimbursements)
+        {
+            return reimbursements.Select(reimbursement => new QuickenCsvRow
+                                                          {
+                                                              Action = "Cash",
+                                                              Date = reimbursement.Date.ToString(DateFormat),
+                                                              Account = $"VIAC 3a ({reimbursement.PortfolioNumber})",
+                                                              Amount = reimbursement.Value,
+                                                              Memo = reimbursement.Remark,
+                                                          });
         }
     }
 }

@@ -59,6 +59,7 @@ namespace ViacQuickenConverter
                 List<Interest> interests = [];
                 List<Commission> commissions = [];
                 List<Reimbursement> reimbursements = [];
+                var parsedFiles = 0;
                 foreach (var filePath in filePaths)
                 {
                     using var pdf = PdfDocument.Open(filePath);
@@ -104,12 +105,13 @@ namespace ViacQuickenConverter
                     else
                     {
                         Console.WriteLine($"Skipping file '{filePath}' — unrecognized statement type.");
+                        continue;
                     }
+
+                    ++parsedFiles;
                 }
 
                 const int labelWidth = 34;
-                var totalCount = orders.Count + dividendCancellations.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count +
-                                 reimbursements.Count;
                 Console.WriteLine($"{Environment.NewLine}Parsed Viac Statements:");
                 Console.WriteLine($"  {$"{ExchangeSettlement}s:",-labelWidth} {orders.Count}");
                 Console.WriteLine($"  {$"{DividendPaymentCancellation}s:",-labelWidth} {dividendCancellations.Count}");
@@ -119,7 +121,7 @@ namespace ViacQuickenConverter
                 Console.WriteLine($"  {$"{Commission}s:",-labelWidth} {commissions.Count}");
                 Console.WriteLine($"  {$"{Merger}s:",-labelWidth} {mergers.Count}");
                 Console.WriteLine($"  {$"{Reimbursement}s:",-labelWidth} {reimbursements.Count}");
-                Console.WriteLine($"  {"Total",-labelWidth} {totalCount}");
+                Console.WriteLine($"  {"Total",-labelWidth} {parsedFiles}");
 
                 if (mergers.Count > 0)
                 {
@@ -133,7 +135,8 @@ namespace ViacQuickenConverter
                                        deposits,
                                        interests,
                                        commissions,
-                                       mergers);
+                                       mergers,
+                                       reimbursements);
 
                 Console.WriteLine($"{Environment.NewLine}Done. Press any key to exit.");
                 Console.ReadKey(true);
