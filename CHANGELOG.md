@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-01-13
+
+### Features
+
+- Processing of reimbursements (refunds when contributions exceed the allowed maximum for 3a accounts).
+
 ## [1.0.0] - 2025-12-18
 
 Initial release.

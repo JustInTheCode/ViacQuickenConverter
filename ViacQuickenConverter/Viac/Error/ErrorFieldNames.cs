@@ -38,6 +38,8 @@
 
         public const string MergerDate = "merger date";
 
+        public const string ReimbursementDate = "reimbursement date";
+
         public const string DividendType = "dividend type";
 
         public const string Payment = "payment";

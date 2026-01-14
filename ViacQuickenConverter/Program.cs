@@ -29,6 +29,8 @@ namespace ViacQuickenConverter
 
         private const string Merger = "Exchange Settlement Fund Fusion";
 
+        private const string Reimbursement = "Reimbursement";
+
         public static async Task Main(string[] _)
         {
             try
@@ -48,6 +50,7 @@ namespace ViacQuickenConverter
                 var depositParser = new DepositParser(exchangeRateClient);
                 var interestParser = new InterestParser(exchangeRateClient);
                 var commissionParser = new CommissionParser(exchangeRateClient);
+                var reimbursementParser = new ReimbursementParser(exchangeRateClient);
                 List<Merger> mergers = [];
                 List<Order> orders = [];
                 List<DividendCancellation> dividendCancellations = [];
@@ -55,6 +58,8 @@ namespace ViacQuickenConverter
                 List<Deposit> deposits = [];
                 List<Interest> interests = [];
                 List<Commission> commissions = [];
+                List<Reimbursement> reimbursements = [];
+                var parsedFiles = 0;
                 foreach (var filePath in filePaths)
                 {
                     using var pdf = PdfDocument.Open(filePath);
@@ -93,14 +98,20 @@ namespace ViacQuickenConverter
                     {
                         commissions.Add(await ParseWithLoggingAsync(Commission, filePath, () => commissionParser.ParseAsync(text, filePath)));
                     }
+                    else if (text.Contains(Reimbursement))
+                    {
+                        reimbursements.Add(await ParseWithLoggingAsync(Reimbursement, filePath, () => reimbursementParser.ParseAsync(text, filePath)));
+                    }
                     else
                     {
                         Console.WriteLine($"Skipping file '{filePath}' — unrecognized statement type.");
+                        continue;
                     }
+
+                    ++parsedFiles;
                 }
 
                 const int labelWidth = 34;
-                var totalCount = orders.Count + dividendCancellations.Count + dividends.Count + deposits.Count + interests.Count + commissions.Count + mergers.Count;
                 Console.WriteLine($"{Environment.NewLine}Parsed Viac Statements:");
                 Console.WriteLine($"  {$"{ExchangeSettlement}s:",-labelWidth} {orders.Count}");
                 Console.WriteLine($"  {$"{DividendPaymentCancellation}s:",-labelWidth} {dividendCancellations.Count}");
@@ -109,7 +120,8 @@ namespace ViacQuickenConverter
                 Console.WriteLine($"  {$"{Interest}s:",-labelWidth} {interests.Count}");
                 Console.WriteLine($"  {$"{Commission}s:",-labelWidth} {commissions.Count}");
                 Console.WriteLine($"  {$"{Merger}s:",-labelWidth} {mergers.Count}");
-                Console.WriteLine($"  {"Total",-labelWidth} {totalCount}");
+                Console.WriteLine($"  {$"{Reimbursement}s:",-labelWidth} {reimbursements.Count}");
+                Console.WriteLine($"  {"Total",-labelWidth} {parsedFiles}");
 
                 if (mergers.Count > 0)
                 {
@@ -123,7 +135,8 @@ namespace ViacQuickenConverter
                                        deposits,
                                        interests,
                                        commissions,
-                                       mergers);
+                                       mergers,
+                                       reimbursements);
 
                 Console.WriteLine($"{Environment.NewLine}Done. Press any key to exit.");
                 Console.ReadKey(true);

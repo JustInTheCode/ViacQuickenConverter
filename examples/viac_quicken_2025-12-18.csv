@@ -6,6 +6,7 @@ Sold,2025-05-02,VIAC 3a (3.172.123.119.01),UBS SPI Extra,CH0110869143,0.01446716
 Div,2025-05-22,VIAC 3a (3.172.123.119.01),UBS SPI Extra,CH0110869143,0.8309333333333333333333333333,22.695000,18.858032,,,,"CHF-USD (1.210400), Amt: 15.58, Type: Tax Refund",,,,,
 Div,2025-05-27,VIAC 3a (3.172.123.119.01),UBS US - Pension Fund,CH0030849712,2.7586206896551724137931034483,0.87,2.40,,,,"Already in USD, no currency conversion necessary, Type: Ordinary",,,,,
 Cash,2025-01-27,VIAC 3a (3.172.123.119.01),,,,,673.909500,,,,"CHF-USD (1.113900), Amt: 1000.00",,,,,
+Cash,2025-12-29,VIAC 3a (3.172.123.119.01),,,,,-2.5322,,,,"CHF-USD (1.266100), Amt: -2.00, Type: Reimbursement",,,,,
 IntInc,2025-05-31,VIAC 3a (3.172.123.119.01),Cash,,,,0.145668,,,,"CHF-USD (1.213900), Amt: 0.12",,,,,
 IntInc,2025-08-31,VIAC 3a (3.172.123.119.01),Cash,,,,0.00,,,,"Amount is zero, no currency conversion necessary",,,,,
 MiscExp,2025-11-30,VIAC 3a (3.172.123.119.01),,,,,-16.434812,,,,"CHF-USD (1.241300), Amt: -13.24",,Financial:Financial Advisor,,,
