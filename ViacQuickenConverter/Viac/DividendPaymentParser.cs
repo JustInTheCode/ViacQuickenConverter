@@ -63,7 +63,7 @@ namespace ViacQuickenConverter.Viac
                 {
                     portfolioNumber = GetPortfolioNumber(line);
                 }
-                else if (line.StartsWith("Type of dividend:"))
+                else if (line.StartsWith("Type of dividend:") || line.StartsWith("Type of distribution:"))
                 {
                     dividendType = GetDividendType(line);
                 }
@@ -75,7 +75,7 @@ namespace ViacQuickenConverter.Viac
                 {
                     isin = GetIsin(line);
                 }
-                else if (line.Contains("Dividend payment:"))
+                else if (line.Contains("Dividend payment:") || line.Contains("Distribution:"))
                 {
                     (payment, currency) = GetPaymentAndCurrency(line);
                 }
@@ -154,7 +154,8 @@ namespace ViacQuickenConverter.Viac
             {
                 "Ordinary dividend" => "Ordinary",
                 "Refund withholding tax" => "Tax Refund",
-                _ => throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, ["Ordinary dividend", "Refund withholding tax"]),
+                "Refund Swiss withholding tax" => "Tax Refund",
+                _ => throw new UnsupportedValueException(ErrorFieldNames.DividendType, line, dividendType, ["Ordinary dividend", "Refund withholding tax", "Refund Swiss withholding tax"]),
             };
         }
 
@@ -181,7 +182,7 @@ namespace ViacQuickenConverter.Viac
 
         private static (decimal Payment, string Currency) GetPaymentAndCurrency(string line)
         {
-            var lineComponents = LineParser.SplitLine(line, 4, LineParser.WordCountRequirement.Exact, ErrorFieldNames.PaymentAndCurrency);
+            var lineComponents = LineParser.SplitLine(line, 3, LineParser.WordCountRequirement.Minimum, ErrorFieldNames.PaymentAndCurrency);
             var paymentString = lineComponents[^1].Replace("'", "");
             var currency = lineComponents[^2];
 

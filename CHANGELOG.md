@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-11-18
+
+### Fixes
+
+- Dividend statements using the newer "distribution" wording ("Type of distribution:", "Distribution:") are now parsed instead of failing.
+- Withholding tax refunds labelled "Refund Swiss withholding tax" are recognised as tax refunds.
+
 ## [1.1.0] - 2026-01-13
 
 ### Features
